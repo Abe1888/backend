@@ -37,7 +37,7 @@ services:
         # Must include every domain from which the frontend is served.
         # translinket.com = primary cPanel-hosted production frontend.
         # Add www variant — browsers send it as Origin on www requests.
-        value: https://translinket.com,https://www.translinket.com
+        value: https://yourdoamin.com,https://www.yourdoamin.com
 
       - key: VITE_WS_BACKEND_URL
         # Injected into the frontend bundle at build time by Render.
