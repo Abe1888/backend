@@ -950,18 +950,18 @@ export class TranslinkEasterEggFriend {
         // Initialize client-side AI Cognition & Memory
         this.brain = new TranslinkAIBrain();
         this.brain.setDecisionCallback((promptText, emotion, event) => {
-            if (this._speechStoppedByUser) {
-                console.log(`[Companion] Speech stopped by user. Ignoring voice prompt for event: ${event}. Showing visual response: ${emotion}`);
-                this.setExpression(emotion);
-                return;
-            }
-            const voiceManager = this._ensureVoiceManager();
-            if (voiceManager.isConnected()) {
-                voiceManager.sendText(promptText);
-                this.setExpression(emotion);
+            // Disabled all automatic speech and voice activation.
+            // We only send text prompts if the user explicitly clicked the assistant and is actively connected.
+            if (event === 'assistant_click') {
+                const voiceManager = this._ensureVoiceManager();
+                if (voiceManager.isConnected() && !this._speechStoppedByUser) {
+                    voiceManager.sendText(promptText);
+                    this.setExpression(emotion);
+                }
             } else {
-                console.log('[Companion] Automatically connecting voice link due to brain decision:', emotion);
-                this._autoConnectAndPrompt(promptText, emotion);
+                // Scroll, fast scroll, hover, and other automatic events only update visual expressions.
+                this.setExpression(emotion);
+                console.log(`[Companion] Auto speech disabled for event: ${event}. Visual expression updated to: ${emotion}`);
             }
         });
 
@@ -2066,14 +2066,11 @@ export class TranslinkEasterEggFriend {
 
         if (isMobile) {
             welcomeTl.add(() => {
-                this.state = State.PRESENTING;
-                this._updateStateClasses('guiding', 'confirming');
-                this.welcomeCompleted = false;
-
-                this._autoConnectAndPrompt(
-                    `Welcome the visitor warmly. In your greeting, clearly say that Translink is the ONE STOP SOLUTION for fleet telematics, GPS tracking, fuel management, and AI-driven safety across East Africa. Keep it to 2 short, natural sentences. Sound calm, premium, professional, and helpful. Invite them to ask a fleet-related question.`,
-                    "confirming"
-                );
+                this.state = State.IDLE;
+                this._updateStateClasses('idle', 'neutral');
+                this.welcomeCompleted = true;
+                this.welcomeGuideDelivered = true;
+                this._setWelcomedThisSession();
             });
         } else {
             // Calculate center coordinates relative to home corner anchor
@@ -2124,18 +2121,17 @@ export class TranslinkEasterEggFriend {
                     this.facing = 1;
                     this.currentFacing = 1;
 
-                    this.welcomeCompleted = false;
+                    this.welcomeCompleted = true;
+                    this.welcomeGuideDelivered = true;
+                    this._setWelcomedThisSession();
 
-                    // No notepad — robot greets verbally only
+                    // No notepad — robot greets visually only
                     this.state = State.PRESENTING;
 
-                    // BUG FIX #1: Automatically connect and play the welcome — but pass welcome=false
-                    // because we are sending the prompt text ourselves via sendText().
-                    // Passing welcome=true would cause the SERVER to also fire its own welcome prompt, doubling it.
-                    this._autoConnectAndPrompt(
-                        `Welcome the visitor warmly. In your greeting, clearly say that Translink is the ONE STOP SOLUTION for fleet telematics, GPS tracking, fuel management, and AI-driven safety across East Africa. Keep it to 2 short, natural sentences. Sound calm, premium, professional, and helpful. Invite them to ask a fleet-related question.`,
-                        "confirming"
-                    );
+                    // Automatically return home silently after waving
+                    setTimeout(() => {
+                        this.returnHome();
+                    }, 4000);
                 }
             }, '-=0.2');
         }
@@ -2174,7 +2170,12 @@ export class TranslinkEasterEggFriend {
             // If we are in active flight or presenting, scrolling immediately returns us home smoothly
             if (this.state === State.FLYING || this.state === State.PRESENTING) {
                 this.returnHome();
-                if (window.scrollY > 50 && this.voiceManager && this.voiceManager.isConnected()) {
+                if (this.voiceManager && this.voiceManager.isConnected()) {
+                    this.voiceManager.disconnect();
+                }
+            } else {
+                // Instantly terminate any active automatic speech on scroll
+                if (this.voiceManager && this.voiceManager.isConnected()) {
                     this.voiceManager.disconnect();
                 }
             }
