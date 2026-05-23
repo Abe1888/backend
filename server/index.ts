@@ -260,14 +260,16 @@ wss.on('connection', async (clientWs, request) => {
 
   let lang = 'en';
   let welcome = true;
+  let visitorName = '';
   try {
     const url = new URL(request.url || '', `http://${request.headers.host || 'localhost'}`);
     const rawLang = url.searchParams.get('lang') || 'en';
     lang = rawLang.toLowerCase();
     if (lang !== 'en' && lang !== 'am' && lang !== 'ar') lang = 'en';
     if (url.searchParams.get('welcome') === 'false') welcome = false;
+    visitorName = url.searchParams.get('visitorName') || '';
   } catch (e) {
-    console.error('[Server] Error parsing connection request URL lang param:', e);
+    console.error('[Server] Error parsing connection request URL params:', e);
   }
 
   const selectedVoice = getSelectedVoice(lang);
@@ -296,9 +298,9 @@ wss.on('connection', async (clientWs, request) => {
   try {
     console.log(
       `[Server] Handing off client to GeminiLiveService ` +
-      `(lang: ${lang}, voice: ${selectedVoice}, welcome: ${welcome})`
+      `(lang: ${lang}, voice: ${selectedVoice}, welcome: ${welcome}, visitorName: ${visitorName})`
     );
-    await service.handleConnection(clientWs, lang, selectedVoice, welcome);
+    await service.handleConnection(clientWs, lang, selectedVoice, welcome, visitorName);
   } catch (err) {
     console.error('[Server] GeminiLiveService connection handoff failed:', err);
     clientWs.send(JSON.stringify({ error: 'Failed to initialize AI Service' }));

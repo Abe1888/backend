@@ -9,6 +9,136 @@ import fs from 'fs';
 
 dotenv.config();
 
+function cmsPlugin() {
+  return {
+    name: 'cms-plugin',
+    configureServer(server: any) {
+      server.middlewares.use(async (req: any, res: any, next: any) => {
+        const url = new URL(req.url || '', 'http://localhost');
+        const pathname = url.pathname;
+
+        if (
+          pathname === '/api/config/language' || 
+          pathname === '/api/config/mesh/behavior' || 
+          pathname === '/api/config/mesh/material' || 
+          pathname === '/api/config/camera' ||
+          pathname === '/api/config/voice' ||
+          pathname === '/api/config/knowledge' ||
+          pathname === '/api/config/knowledge-md'
+        ) {
+          let filename = 'language_config.json';
+          let requiredKey: string | null = 'languages';
+          let subDir = '';
+          
+          if (pathname === '/api/config/mesh/behavior') {
+            filename = 'mesh_behavior_config.json';
+            requiredKey = 'meshes';
+          } else if (pathname === '/api/config/mesh/material') {
+            filename = 'mesh_material_config.json';
+            requiredKey = 'materials';
+          } else if (pathname === '/api/config/camera') {
+            filename = 'camera_config.json';
+            requiredKey = 'cameraKeyframesDesktop';
+          } else if (pathname === '/api/config/voice') {
+            filename = 'voice_config.json';
+            subDir = 'live-voice';
+            requiredKey = 'voiceMetadata';
+          } else if (pathname === '/api/config/knowledge') {
+            filename = 'knowledge_config.json';
+            subDir = 'live-voice';
+            requiredKey = 'sync_engine';
+          } else if (pathname === '/api/config/knowledge-md') {
+            filename = 'knowledge.md';
+            subDir = 'live-voice';
+            requiredKey = null;
+          }
+          
+          const configPath = subDir 
+            ? path.resolve(__dirname, 'src', 'translinkconfig', subDir, filename)
+            : path.resolve(__dirname, 'src', 'translinkconfig', filename);
+          const backupPath = subDir
+            ? path.resolve(__dirname, 'src', 'translinkconfig', subDir, filename.replace('.json', '.backup.json').replace('.md', '.backup.md'))
+            : path.resolve(__dirname, 'src', 'translinkconfig', filename.replace('.json', '.backup.json'));
+
+          if (req.method === 'GET') {
+            try {
+              if (!fs.existsSync(configPath)) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ error: `Config file not found: ${filename}` }));
+                return;
+              }
+              const raw = fs.readFileSync(configPath, 'utf8');
+              res.statusCode = 200;
+              if (requiredKey !== null) {
+                res.setHeader('Content-Type', 'application/json');
+              } else {
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+              }
+              res.end(raw);
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: err.message }));
+            }
+            return;
+          }
+
+          if (req.method === 'POST') {
+            try {
+              let body = '';
+              req.on('data', (chunk: any) => { body += chunk; });
+              req.on('end', () => {
+                try {
+                  if (requiredKey !== null) {
+                    const payload = JSON.parse(body);
+                    if (!payload || typeof payload !== 'object' || !payload[requiredKey]) {
+                      res.statusCode = 400;
+                      res.setHeader('Content-Type', 'application/json');
+                      res.end(JSON.stringify({ error: `Invalid config payload: missing key '${requiredKey}'` }));
+                      return;
+                    }
+                    
+                    // Backup
+                    if (fs.existsSync(configPath)) {
+                      fs.copyFileSync(configPath, backupPath);
+                    }
+                    
+                    // Save
+                    fs.writeFileSync(configPath, JSON.stringify(payload, null, 2), 'utf8');
+                  } else {
+                    // Backup
+                    if (fs.existsSync(configPath)) {
+                      fs.copyFileSync(configPath, backupPath);
+                    }
+                    
+                    // Save
+                    fs.writeFileSync(configPath, body, 'utf8');
+                  }
+                  
+                  res.statusCode = 200;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ status: 'ok', message: `${filename} saved successfully` }));
+                } catch (e: any) {
+                  res.statusCode = 400;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: `Failed to parse or write config: ${e.message}` }));
+                }
+              });
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: err.message }));
+            }
+            return;
+          }
+        }
+        next();
+      });
+    }
+  };
+}
+
 function geminiVoicePlugin() {
   return {
     name: 'gemini-voice-plugin',
@@ -171,7 +301,7 @@ export default defineConfig({
   root: '.',
   base: '/',
   publicDir: 'public',
-  plugins: [react(), geminiVoicePlugin()],
+  plugins: [react(), geminiVoicePlugin(), cmsPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -197,8 +327,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 600, // Three.js core is ~520KB
     rollupOptions: {
       input: {
-        // index.html is the sole active entry point.
         index: path.resolve(__dirname, 'index.html'),
+        cms: path.resolve(__dirname, 'cms.html'),
       },
       output: {
         manualChunks,

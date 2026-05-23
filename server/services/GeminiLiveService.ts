@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenAI, LiveServerMessage, Modality, Type } from "@google/genai";
 import fs from 'fs';
 import path from 'path';
 import { voiceTelemetryService } from "./VoiceTelemetryService.js";
@@ -13,6 +13,7 @@ export class GeminiLiveService {
   private ai: GoogleGenAI;
   private knowledgeBase: string;
   private systemInstructionCache = new Map<string, string>();
+  private sessionStates = new Map<string, { isInterrupted: boolean }>();
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({
@@ -24,11 +25,12 @@ export class GeminiLiveService {
     this.knowledgeBase = this.loadKnowledgeBase();
   }
 
-  async handleConnection(clientWs: WebSocket, lang: string = 'en', selectedVoice: string = 'Zephyr', welcome: boolean = true) {
+  async handleConnection(clientWs: WebSocket, lang: string = 'en', selectedVoice: string = 'Zephyr', welcome: boolean = true, visitorName: string = '') {
     const sessionId = uuidv4();
-    console.log(`[GeminiLive] New session: ${sessionId} (Lang: ${lang}, Welcome: ${welcome})`);
+    console.log(`[GeminiLive] New session: ${sessionId} (Lang: ${lang}, Welcome: ${welcome}, Visitor: ${visitorName})`);
+    this.sessionStates.set(sessionId, { isInterrupted: false });
     voiceTelemetryService.startSession(sessionId, { lang, voice: selectedVoice, welcome });
-    agentOrchestrator.startSession({ sessionId, lang, voice: selectedVoice, welcome });
+    agentOrchestrator.startSession({ sessionId, lang, voice: selectedVoice, welcome, visitorName });
 
     let session: any;
     let sessionReady = false;
@@ -68,6 +70,7 @@ export class GeminiLiveService {
 
     clientWs.on("close", (code, reason) => {
       console.log(`[GeminiLive] Session ${sessionId} closed`);
+      this.sessionStates.delete(sessionId);
       voiceTelemetryService.closeSession(sessionId, code, reason.toString());
       agentOrchestrator.endSession(sessionId);
       if (session) {
@@ -83,14 +86,84 @@ export class GeminiLiveService {
       session = await this.ai.live.connect({
         model: "gemini-3.1-flash-live-preview",
         callbacks: {
-          onmessage: (message: LiveServerMessage) => this.handleServerMessage(clientWs, sessionId, message),
+          onmessage: (message: LiveServerMessage) => this.handleServerMessage(clientWs, sessionId, message, session),
         },
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: selectedVoice } },
           },
-          systemInstruction: { parts: [{ text: agentOrchestrator.getSystemInstruction(lang) }] },
+          systemInstruction: { parts: [{ text: agentOrchestrator.getSystemInstruction(lang, visitorName) }] },
+          tools: [{
+            functionDeclarations: [
+              {
+                name: "saveVisitorName",
+                description: "Saves the visitor's name when they introduce themselves or tell you their name.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: {
+                      type: Type.STRING,
+                      description: "The name of the visitor (e.g. Abebaw, John)."
+                    }
+                  },
+                  required: ["name"]
+                }
+              },
+              {
+                name: "qualifySector",
+                description: "Registers the target industry sector of the visitor's fleet or business.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    sector: {
+                      type: Type.STRING,
+                      description: "The business sector, e.g., logistics, construction, FMCG, distribution, manufacturing, or other."
+                    }
+                  },
+                  required: ["sector"]
+                }
+              },
+              {
+                name: "submitBusinessLead",
+                description: "Submits a qualified sales lead or business inquiry to Translink's backend.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    fullName: {
+                      type: Type.STRING,
+                      description: "Full name of the contact person."
+                    },
+                    companyName: {
+                      type: Type.STRING,
+                      description: "Name of their company (optional)."
+                    },
+                    email: {
+                      type: Type.STRING,
+                      description: "Email address of the contact person."
+                    },
+                    phone: {
+                      type: Type.STRING,
+                      description: "Phone number of the contact person."
+                    },
+                    preferredContactMethod: {
+                      type: Type.STRING,
+                      description: "Visitor's preferred contact channel. Must be one of: 'live_demo', 'scheduled_call', 'email_follow_up', 'project_consultation'."
+                    },
+                    bestContactTime: {
+                      type: Type.STRING,
+                      description: "Preferred day/time for follow-up (optional)."
+                    },
+                    requestedServiceDetails: {
+                      type: Type.STRING,
+                      description: "Any specific requests, fleet size, or project details they mentioned."
+                    }
+                  },
+                  required: ["fullName", "email", "phone", "preferredContactMethod"]
+                }
+              }
+            ]
+          }]
         }
       });
 
@@ -104,11 +177,15 @@ export class GeminiLiveService {
 
       if (welcome) {
         // Initial prompt — natural, warm, human-like welcome
-        let initialPrompt = agentOrchestrator.getWelcomePrompt(lang);
+        let initialPrompt = agentOrchestrator.getWelcomePrompt(lang, visitorName);
         if (lang === 'ar') {
-          initialPrompt = `رحّب بالزائر بحرارة. في تحيتك، قل بفخر أن ترانسلينك هي الحل الشامل الوحيد — ONE STOP SOLUTION — لتيليماتكس الأساطيل وتتبع GPS وإدارة الوقود والسلامة المدعومة بالذكاء الاصطناعي في شرق أفريقيا. شدد على "الحل الشامل الوحيد" بفخر وحماس. جملتان قصيرتان فقط. تحدث بالعربية الفصيحة بأسلوب طبيعي.`;
+          initialPrompt = visitorName
+            ? `أهلاً بك مجدداً يا ${visitorName} في ترانسلينك. رحّب به بحرارة بأسلوب طبيعي وموجز في جملتين قصيرتين فقط.`
+            : `رحّب بالزائر بحرارة. في تحيتك، قل بفخر أن ترانسلينك هي الحل الشامل الوحيد — ONE STOP SOLUTION — لتيليماتكس الأساطيل وتتبع GPS وإدارة الوقود والسلامة المدعومة بالذكاء الاصطناعي في شرق أفريقيا. شدد على "الحل الشامل الوحيد" بفخر وحماس. جملتان قصيرتان فقط. تحدث بالعربية الفصيحة بأسلوب طبيعي، واطلب اسمه بلطف.`;
         } else if (lang === 'am') {
-          initialPrompt = `ጎብኝውን በሞቅ ልብ ተቀበሏቸው። ሰላምታዎ ውስጥ ትራንስሊንክ በምስራቅ አፍሪካ ለፍሊት ቴሌማቲክስ፣ GPS ክትትል፣ የነዳጅ ቁጥጥር እና AI ደህንነት ONE STOP SOLUTION — ሁሉንም በአንድ ቦታ — መሆኑን በኩራት ይናገሩ። "One Stop Solution" ን አጽንኦት ይስጡ። 2 አጫጭር ተፈጥሮአዊ ዓረፍተ ነገሮች ብቻ። በደመቀ አማርኛ ይናገሩ።`;
+          initialPrompt = visitorName
+            ? `እንኳን ደህና መጡ ${visitorName}! ሰላምታ ይስጡት እና ዛሬ በምን ልንረዳው እንደምንችል በአጭሩ ይጠይቁት።`
+            : `ጎብኝውን በሞቅ ልብ ተቀበሏቸው። ሰላምታዎ ውስጥ ትራንስሊንክ በምስራቅ አፍሪካ ለፍሊት ቴሌማቲክስ፣ GPS ክትትል፣ የነዳጅ ቁጥጥር እና AI ደህንነት ONE STOP SOLUTION — ሁሉንም በአንድ ቦታ — መሆኑን በኩራት ይናገሩ። "One Stop Solution" ን አጽንኦት ይስጡ። 2 አጫጭር ተፈጥሮአዊ ዓረፍተ ነገሮች ብቻ። በደመቀ አማርኛ ይናገሩ፣ ስማቸውንም በትህትና ይጠይቁ።`;
         }
         
         // Wait a moment for connection stabilization
@@ -153,9 +230,27 @@ export class GeminiLiveService {
         voiceTelemetryService.mark(sessionId, 'client_interrupt', {
           reason: msg.reason || 'user_interrupt',
         });
+        const state = this.sessionStates.get(sessionId);
+        if (state) {
+          state.isInterrupted = true;
+        }
+        clientWs.send(JSON.stringify({ interrupted: true }));
+        // Signal the stream end to Gemini using the correct SDK method.
+        // Empty turns[] is not a valid API call — instead mark the audio stream as ended
+        // so Gemini knows the current user turn is complete. The isInterrupted flag above
+        // handles suppressing any residual audio from the model's in-flight response.
+        try {
+          session.sendRealtimeInput({ audioStreamEnd: true });
+        } catch (serr) {
+          console.warn(`[GeminiLive] Failed to send audioStreamEnd cancel signal to Gemini session ${sessionId}:`, serr);
+        }
       }
 
       if (msg.audio) {
+        const state = this.sessionStates.get(sessionId);
+        if (state) {
+          state.isInterrupted = false;
+        }
         voiceTelemetryService.increment(sessionId, 'clientAudioFrames');
         voiceTelemetryService.mark(sessionId, 'first_client_audio');
         session.sendRealtimeInput({
@@ -173,6 +268,10 @@ export class GeminiLiveService {
       }
 
       if (msg.realtimeInput && msg.realtimeInput.mediaChunks) {
+        const state = this.sessionStates.get(sessionId);
+        if (state) {
+          state.isInterrupted = false;
+        }
         // Backward-compatible path for older Robot client builds.
         const chunks = msg.realtimeInput.mediaChunks;
         for (const chunk of chunks) {
@@ -191,6 +290,10 @@ export class GeminiLiveService {
       }
       
       if (msg.text && session) {
+        const state = this.sessionStates.get(sessionId);
+        if (state) {
+          state.isInterrupted = false;
+        }
         console.log(`[GeminiLive] Forwarding text prompt to Gemini session ${sessionId}:`, msg.text.substring(0, 80) + '...');
         const orchestratedPrompt = await agentOrchestrator.buildUserTurn(sessionId, msg.text);
         session.sendClientContent({
@@ -207,7 +310,7 @@ export class GeminiLiveService {
     }
   }
 
-  private handleServerMessage(clientWs: WebSocket, sessionId: string, message: LiveServerMessage) {
+  private handleServerMessage(clientWs: WebSocket, sessionId: string, message: LiveServerMessage, session?: any) {
     console.log(`[GeminiLive] Received server message for session ${sessionId}:`, JSON.stringify(message).substring(0, 200) + '...');
     
     // Check for error in the message
@@ -229,43 +332,128 @@ export class GeminiLiveService {
       return;
     }
 
-    // 1. Forward Audio
-    if (message.serverContent?.modelTurn?.parts) {
-      let audioPartsCount = 0;
-      for (const part of message.serverContent.modelTurn.parts) {
-        if (part.inlineData?.data) {
-          audioPartsCount++;
-          voiceTelemetryService.increment(sessionId, 'modelAudioChunks');
-          voiceTelemetryService.mark(sessionId, 'first_model_audio');
-          clientWs.send(JSON.stringify({ audio: part.inlineData.data }));
+
+    // 3. Handle serverContent — route audio, transcription, and turnComplete to the client
+    if (message.serverContent) {
+      const content = message.serverContent as any;
+      const state = this.sessionStates.get(sessionId);
+      const isInterrupted = state?.isInterrupted ?? false;
+
+      // Route model turn audio and text chunks only when NOT interrupted
+      if (content.modelTurn?.parts) {
+        for (const part of content.modelTurn.parts) {
+          if (part.inlineData?.data && part.inlineData?.mimeType?.startsWith('audio/')) {
+            if (!isInterrupted) {
+              voiceTelemetryService.increment(sessionId, 'modelAudioChunks');
+              clientWs.send(JSON.stringify({ audio: part.inlineData.data }));
+            } else {
+              voiceTelemetryService.increment(sessionId, 'serverInterruptions');
+              console.log(`[GeminiLive] Dropping audio chunk for interrupted session ${sessionId}`);
+            }
+          }
+          if (part.text && !isInterrupted) {
+            clientWs.send(JSON.stringify({ text: part.text }));
+          }
         }
       }
-      if (audioPartsCount > 0) {
-        console.log(`[GeminiLive] Forwarded ${audioPartsCount} audio chunks to client for session ${sessionId}`);
+
+      // Always forward turnComplete — client needs to know to stop buffering
+      if (content.turnComplete) {
+        console.log(`[GeminiLive] Turn complete for session ${sessionId}`);
+        voiceTelemetryService.mark(sessionId, 'turn_complete');
+        clientWs.send(JSON.stringify({ turnComplete: true }));
       }
+
+      return;
     }
 
-    // 2. Handle Flags
-    if (message.serverContent?.interrupted) {
-      console.log(`[GeminiLive] Session ${sessionId} interrupted by client`);
-      voiceTelemetryService.mark(sessionId, 'server_interrupted');
-      clientWs.send(JSON.stringify({ interrupted: true }));
-    }
-    if (message.serverContent?.turnComplete) {
-      console.log(`[GeminiLive] Turn complete for session ${sessionId}`);
-      voiceTelemetryService.mark(sessionId, 'turn_complete');
-      clientWs.send(JSON.stringify({ turnComplete: true }));
-    }
-
-    // 3. Handle Transcriptions & Memory
-    if (message.serverContent?.modelTurn?.parts) {
-      const text = message.serverContent.modelTurn.parts.map(p => p.text).filter(Boolean).join("");
-      if (text) {
-        console.log(`[GeminiLive] Received text transcription for session ${sessionId}: ${text}`);
-        voiceTelemetryService.increment(sessionId, 'modelTextMessages');
-        voiceTelemetryService.mark(sessionId, 'first_model_text');
-        clientWs.send(JSON.stringify({ text }));
-        void agentOrchestrator.recordModelResponse(sessionId, text);
+    // 4. Handle Tool Calls
+    if (message.toolCall?.functionCalls) {
+      const functionCalls = message.toolCall.functionCalls;
+      console.log(`[GeminiLive] Received ${functionCalls.length} tool calls for session ${sessionId}`);
+      
+      const responses: any[] = [];
+      
+      for (const fc of functionCalls) {
+        const id = fc.id;
+        const name = fc.name;
+        const args = fc.args || {};
+        
+        console.log(`[GeminiLive] Processing tool call ${name} (ID: ${id}) with args:`, args);
+        
+        if (name === 'saveVisitorName') {
+          const visitorName = String(args.name || '').trim();
+          if (visitorName) {
+            const orchestratorSession = agentOrchestrator.getSession(sessionId);
+            if (orchestratorSession) {
+              orchestratorSession.visitorName = visitorName;
+            }
+            clientWs.send(JSON.stringify({ visitorName }));
+          }
+          responses.push({
+            id,
+            name,
+            response: { success: true, message: `Visitor name '${visitorName}' saved successfully.` }
+          });
+        } else if (name === 'qualifySector') {
+          const sector = String(args.sector || '').trim();
+          console.log(`[GeminiLive] Qualified sector: ${sector} for session ${sessionId}`);
+          responses.push({
+            id,
+            name,
+            response: { success: true, message: `Sector set to ${sector}.` }
+          });
+        } else if (name === 'submitBusinessLead') {
+          try {
+            const leadsDir = path.resolve(process.cwd(), 'src/translinkconfig/logs');
+            fs.mkdirSync(leadsDir, { recursive: true });
+            
+            const leadEntry = JSON.stringify({
+              timestamp: new Date().toISOString(),
+              sessionId,
+              fullName: args.fullName,
+              companyName: args.companyName,
+              email: args.email,
+              phone: args.phone,
+              preferredContactMethod: args.preferredContactMethod,
+              bestContactTime: args.bestContactTime,
+              requestedServiceDetails: args.requestedServiceDetails,
+            }) + '\n';
+            
+            fs.appendFileSync(path.join(leadsDir, 'leads.jsonl'), leadEntry);
+            console.log(`[GeminiLive] Lead submitted successfully for session ${sessionId}`);
+            clientWs.send(JSON.stringify({ leadSubmitted: true }));
+            
+            responses.push({
+              id,
+              name,
+              response: { success: true, message: "Sales lead submitted to Translink backend successfully." }
+            });
+          } catch (err: any) {
+            console.error('[GeminiLive] Error writing lead:', err);
+            responses.push({
+              id,
+              name,
+              response: { success: false, error: err.message || "Failed to submit lead to backend." }
+            });
+          }
+        } else {
+          console.warn(`[GeminiLive] Unknown tool call name: ${name}`);
+          responses.push({
+            id,
+            name,
+            response: { success: false, error: `Function '${name}' is not implemented.` }
+          });
+        }
+      }
+      
+      if (session && responses.length > 0) {
+        console.log(`[GeminiLive] Sending tool response to Gemini for session ${sessionId}:`, JSON.stringify(responses));
+        try {
+          session.sendToolResponse({ functionResponses: responses });
+        } catch (err) {
+          console.error(`[GeminiLive] Error sending tool response for session ${sessionId}:`, err);
+        }
       }
     }
   }
