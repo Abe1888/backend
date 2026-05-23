@@ -122,12 +122,12 @@
     }
   },
   "en": {
-    "activeVoice": "Algenib",
+    "activeVoice": "Orus",
     "voices": {
       "Achernar": 0,
       "Achird": 0,
       "Algieba": 0,
-      "Algenib": 1,
+      "Algenib": 0,
       "Alnilam": 0,
       "Aoede": 0,
       "Autonoe": 0,
@@ -142,7 +142,7 @@
       "Kore": 0,
       "Laomedeia": 0,
       "Leda": 0,
-      "Orus": 0,
+      "Orus": 1,
       "Puck": 0,
       "Pulcherrima": 0,
       "Rasalgethi": 0,

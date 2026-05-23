@@ -40,3 +40,13 @@ declare module '*.mp3' {
     const src: string;
     export default src;
 }
+
+/**
+ * Vite ?raw imports — returns the file content as a plain UTF-8 string
+ * at build time. Used by TranslinkAIBrain to import knowledge.md
+ * without hardcoding its contents in TypeScript source.
+ */
+declare module '*.md?raw' {
+    const content: string;
+    export default content;
+}

@@ -7,6 +7,7 @@ export class TerrainSystem {
     private terrainMesh: THREE.Mesh | null = null;
     private isVisible: boolean = true;
     private currentOpacityMultiplier: number = 1.0;
+    private xOffset: number = 0.0;
 
     // Dimensions centered around the road system:
     // Road center: truckX = 0.36, truckZ = -0.6
@@ -100,43 +101,54 @@ export class TerrainSystem {
         // Custom ShaderMaterial for dynamic edge, road, depth, height and fog fading
         const material = new THREE.ShaderMaterial({
             uniforms: {
-                uBgColor: { value: new THREE.Color() },
+                uBgColor:     { value: new THREE.Color() },
                 uValleyColor: { value: new THREE.Color() },
-                uPeakColor: { value: new THREE.Color() },
-                uOpacity: { value: 1.0 },
-                uIsDark: { value: 0.0 },
+                uPeakColor:   { value: new THREE.Color() },
+                uOpacity:     { value: 1.0 },
+                uIsDark:      { value: 0.0 },
+                // Animated terrain scroll — incremented every frame in update()
+                uXOffset:     { value: 0.0 },
             },
             vertexShader: `
+                uniform float uXOffset;
+
                 varying vec3 vNormal;
                 varying vec3 vLocalPos;
+                varying vec3 vScrolledLocalPos;
                 varying vec3 vViewPosition;
 
                 void main() {
                     vNormal = normalize(normalMatrix * normal);
                     vLocalPos = position;
+                    // Pass a scrolled copy so edge-fades and height colours
+                    // drift with the terrain in the fragment shader
+                    vScrolledLocalPos = position + vec3(uXOffset, 0.0, 0.0);
                     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                     vViewPosition = -mvPosition.xyz;
                     gl_Position = projectionMatrix * mvPosition;
                 }
             `,
             fragmentShader: `
-                uniform vec3 uBgColor;
-                uniform vec3 uValleyColor;
-                uniform vec3 uPeakColor;
+                uniform vec3  uBgColor;
+                uniform vec3  uValleyColor;
+                uniform vec3  uPeakColor;
                 uniform float uOpacity;
                 uniform float uIsDark;
+                uniform float uXOffset;
 
                 varying vec3 vNormal;
                 varying vec3 vLocalPos;
+                varying vec3 vScrolledLocalPos;
                 varying vec3 vViewPosition;
 
                 void main() {
-                    // 1. Edge Border Dissolve (Fade out grid edges)
-                    float edgeX = abs(vLocalPos.x) / 30.0;
-                    float edgeZ = abs(vLocalPos.z) / 40.0;
+                    // 1. Edge Border Dissolve — uses SCROLLED X so the
+                    //    fade window travels with the terrain flow
+                    float edgeX = abs(vScrolledLocalPos.x) / 30.0;
+                    float edgeZ = abs(vScrolledLocalPos.z) / 40.0;
                     float edgeFade = smoothstep(1.0, 0.65, max(edgeX, edgeZ));
 
-                    // 2. Road Masking (Ensure road system is completely clean and dominant)
+                    // 2. Road Masking (Z never changes, use static vLocalPos)
                     float distToRoad = abs(vLocalPos.z);
                     float roadFade = smoothstep(1.5, 9.0, distToRoad);
 
@@ -145,7 +157,7 @@ export class TerrainSystem {
                     float nearFade = smoothstep(0.4, 3.5, dist);
                     float farFade = 1.0 - smoothstep(10.0, 26.0, dist);
 
-                    // 4. Height Valley Suppression (Softly dim valleys, keep peaks clean)
+                    // 4. Height Valley Suppression — height is static geometry
                     float heightFade = smoothstep(-0.6, 1.2, vLocalPos.y);
                     heightFade = mix(0.18, 1.0, heightFade);
 
@@ -153,23 +165,20 @@ export class TerrainSystem {
                     float heightT = smoothstep(-0.25, 0.65, vLocalPos.y);
                     vec3 baseColor = mix(uValleyColor, uPeakColor, heightT);
 
-                    // 6. Simulated Studio Lighting Highlight (Top-right Key Light reflection)
-                    vec3 normal = normalize(vNormal);
-                    vec3 lightDir = normalize(vec3(0.4, 0.9, 0.3)); // Aligned to setupLighting key light direction
+                    // 6. Simulated Studio Lighting Highlight
+                    vec3 normal   = normalize(vNormal);
+                    vec3 lightDir = normalize(vec3(0.4, 0.9, 0.3));
                     float ndl = max(dot(normal, lightDir), 0.0);
-                    
-                    // Brilliant highlight gradient
                     vec3 shineColor = mix(uPeakColor, vec3(1.0, 1.0, 1.0), 0.5);
-                    vec3 finalColor = mix(baseColor, shineColor, ndl * (uIsDark > 0.5 ? 0.75 : 0.3));
+                    vec3 finalColor = mix(baseColor, shineColor,
+                                         ndl * (uIsDark > 0.5 ? 0.75 : 0.3));
 
                     // Combine all atmospheric modulators
-                    float finalAlpha = edgeFade * roadFade * nearFade * farFade * heightFade * uOpacity;
+                    float finalAlpha =
+                        edgeFade * roadFade * nearFade * farFade * heightFade * uOpacity;
 
-                    if (finalAlpha < 0.001) {
-                        discard;
-                    }
+                    if (finalAlpha < 0.001) discard;
 
-                    // Render with beautiful dynamic opacity blending
                     gl_FragColor = vec4(finalColor, finalAlpha);
                 }
             `,
@@ -196,6 +205,36 @@ export class TerrainSystem {
             resL,
             position: [this.TERRAIN_X, this.TERRAIN_Y, this.TERRAIN_Z],
         });
+    }
+
+    /**
+     * Advance the slow-motion scroll animation every frame.
+     *
+     * Speed design:
+     *   RoadSystem ROAD_SPEED = 4.0 units/sec (dashes scrolling)
+     *   Terrain scroll = 0.12 units/sec  (~3 % of road speed)
+     *
+     * The uXOffset uniform is passed to the vertex shader which shifts the
+     * scrolled sample coordinate sent to the fragment shader. This keeps all
+     * edge-fade dissolves, height colours, and road-masking visually drifting
+     * in perfect sync with the road without any CPU vertex re-bake.
+     *
+     * Wrapping every 60 units (terrain width) keeps the offset small and
+     * avoids float-precision drift on long sessions.
+     */
+    update(delta: number): void {
+        if (!this.terrainMesh || !this.isVisible) return;
+
+        // Super slow motion: ~3 % of ROAD_SPEED so it feels like distant terrain
+        const TERRAIN_SCROLL_SPEED = 0.12;
+        this.xOffset -= delta * TERRAIN_SCROLL_SPEED;
+
+        // Wrap after one full terrain width (60 units) — seamless on Perlin noise
+        if (this.xOffset < -60) this.xOffset += 60;
+
+        // Push to GPU — zero CPU geometry work
+        const mat = this.terrainMesh.material as THREE.ShaderMaterial;
+        mat.uniforms.uXOffset.value = this.xOffset;
     }
 
     /**

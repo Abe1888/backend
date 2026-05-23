@@ -59,6 +59,15 @@
             "roughness": 0.5,
             "envMapIntensity": 0.8
         },
+        "filterWireframe": {
+            "color": "#c0202f",
+            "metalness": 0.2,
+            "roughness": 0.5,
+            "envMapIntensity": 0.5,
+            "emissive": "#c0202f",
+            "emissiveIntensity": 0.3,
+            "wireframe": true
+        },
         "fuelHeadCover": {
             "color": "#c0202f",
             "metalness": 0.0,

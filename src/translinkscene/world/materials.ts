@@ -48,6 +48,9 @@ export function applyMaterials(model: THREE.Group): void {
             case 'Filter':
                 materialConfig = materialsConfig.filter;
                 break;
+            case 'Filter_Wireframe':
+                materialConfig = materialsConfig.filterWireframe;
+                break;
             case 'Fuel_tank':
                 materialConfig = materialsConfig.fuelTank;
                 break;
@@ -210,6 +213,14 @@ export function applyThemeToMaterials(model: THREE.Group, isDark: boolean): void
                 mat.color.set(isDark ? '#1a1e26' : '#2a2a2a');
                 mat.roughness = isDark ? 0.25 : 0.4;
                 mat.metalness = isDark ? 0.85 : 0.8;
+                break;
+
+            case 'Filter_Wireframe':
+                mat.color.set('#c0202f');
+                if (mat.emissive) {
+                    mat.emissive.set(isDark ? '#c0202f' : '#000000');
+                    mat.emissiveIntensity = isDark ? 0.4 : 0.0;
+                }
                 break;
 
             case 'Text_Translink_pro':

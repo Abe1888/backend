@@ -184,6 +184,12 @@ export class World {
     private cameraSettledFrames: number = 0;
     private static readonly CAMERA_SETTLE_FRAMES = 4;
 
+    // ── Scene vibration (truck-motion pulse) ─────────────────────────────────
+    /** Baseline world position of the root model group — captured on first vibration frame. */
+    private modelBasePosition: THREE.Vector3 | null = null;
+    /** Smoothed vibration intensity 0→1, lerped each frame for eased fade-in/out. */
+    private vibrationIntensity: number = 0;
+
     // Truck edge lines for fade-in effect (EdgesGeometry)
     private truckEdgeLines: Map<string, THREE.LineSegments> = new Map();
 
@@ -683,11 +689,14 @@ export class World {
         // Wheel rotation is the only time-based animation — only active in truck window
         const hasWheelRotation = p >= 0.51 && p <= 0.71 && this.frontWheelPivots.length > 0;
 
+        // Scene vibration is always a continuous effect when active
+        const hasVibration = !!this.model;
+
         // Stars twinkle in dark mode
         const hasTwinklingStars = isCurrentlyDark && this.starsPoints && this.starsPoints.visible;
 
         // ── Early exit: nothing to update ────────────────────────────────────
-        if (!scrollChanged && !hasWheelRotation && !hasTwinklingStars) {
+        if (!scrollChanged && !hasWheelRotation && !hasTwinklingStars && !hasVibration) {
             // Camera may still be lerping toward its target even when scroll is idle.
             // Allow a few more frames to let it settle, then truly stop rendering.
             if (this.cameraSettledFrames >= World.CAMERA_SETTLE_FRAMES) {
@@ -731,6 +740,11 @@ export class World {
         // Spin wheel pivots (only when driving)
         if (hasWheelRotation) {
             this.frontWheelPivots.forEach((pivot) => (pivot.rotation.z -= 3.0 * delta));
+        }
+
+        // Apply physics-inspired truck vibration to the unified model group
+        if (hasVibration) {
+            this.updateSceneVibration(p, currentTime);
         }
 
         // Twinkle stars in dark mode
@@ -794,6 +808,74 @@ export class World {
                   ? ((1.0 - progress) / (1.0 - FADE_OUT_START)) * MAX_OPACITY
                   : MAX_OPACITY;
         this.roadSystem.setGroundPlaneOpacity(opacity);
+    }
+
+    /**
+     * Physics-inspired truck vibration applied to the entire model root group.
+     *
+     * Design principles:
+     * - Single point of application: `this.model.position` only — no per-mesh offsets.
+     * - Y-dominant (vertical bounce) with negligible X/Z micro-drift (road texture feel).
+     * - Multi-frequency layered sine waves that mimic real mechanical vibration:
+     *     Primary   (~8 Hz) : main road rumble / wheel-over-asphalt frequency
+     *     Secondary (~13 Hz): harmonic chassis resonance
+     *     Tertiary  (~5 Hz) : low-freq body roll / suspension float
+     * - Amplitude is tiny (~0.0008 m peak) — invisible at a glance, felt as aliveness.
+     * - Intensity envelope:
+     *     0.00 → 0.10  ramp in from silence (scene intro)
+     *     0.10 → 0.85  full active vibration
+     *     0.85 → 1.00  ramp back to silence (scene outro)
+     * - vibrationIntensity is lerped (not snapped) for silky fade-in/out.
+     */
+    private updateSceneVibration(progress: number, timeMs: number): void {
+        if (!this.model) return;
+
+        // Capture the model's rest position the first time we run
+        if (!this.modelBasePosition) {
+            this.modelBasePosition = this.model.position.clone();
+        }
+
+        // Target intensity: full in the middle section, quiet at scroll extremes
+        const RAMP_IN_END  = 0.10;
+        const RAMP_OUT_START = 0.85;
+        let targetIntensity: number;
+        if (progress < RAMP_IN_END) {
+            targetIntensity = progress / RAMP_IN_END;
+        } else if (progress > RAMP_OUT_START) {
+            targetIntensity = (1.0 - progress) / (1.0 - RAMP_OUT_START);
+        } else {
+            targetIntensity = 1.0;
+        }
+        // Smooth lerp — avoids any perceptible snap
+        this.vibrationIntensity += (targetIntensity - this.vibrationIntensity) * 0.06;
+
+        const t   = timeMs * 0.001;   // seconds
+        const amp = 0.0008;           // peak displacement in world units
+        const iv  = this.vibrationIntensity;
+
+        // --- Three layered oscillators (physics-inspired road vibration) ---
+        // Primary: road-surface rumble (8 Hz vertical bounce)
+        const primary   = Math.sin(t * Math.PI * 2 * 8.0)  * amp * 1.0;
+        // Secondary: chassis harmonic resonance (13 Hz, 40% amplitude)
+        const secondary = Math.sin(t * Math.PI * 2 * 13.0) * amp * 0.4;
+        // Tertiary: slow suspension float (5 Hz, 25% amplitude)
+        const tertiary  = Math.sin(t * Math.PI * 2 * 5.0)  * amp * 0.25;
+
+        // Vertical (Y): full layered composite
+        const dy = (primary + secondary + tertiary) * iv;
+
+        // Lateral (X): barely perceptible side micro-drift (10% of Y, offset phase)
+        const dx = Math.sin(t * Math.PI * 2 * 6.3 + 1.2) * amp * 0.10 * iv;
+
+        // Longitudinal (Z): almost zero — truck goes forward, not sideways
+        const dz = Math.sin(t * Math.PI * 2 * 7.1 + 2.4) * amp * 0.05 * iv;
+
+        // Apply displacement on top of the captured baseline
+        this.model.position.set(
+            this.modelBasePosition.x + dx,
+            this.modelBasePosition.y + dy,
+            this.modelBasePosition.z + dz
+        );
     }
 
     private ensureDOMCache(): void {
