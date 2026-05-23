@@ -21,7 +21,7 @@ import { setupLighting } from '../core/lights';
 import { createBaseScene } from '../core/scene';
 import { loadHDREnvironment } from './environment';
 import { createModelLoader, loadModel } from './loaders';
-import { applyMaterials } from './materials';
+import { applyMaterials, applyThemeToMaterials } from './materials';
 import { AdaptiveLightingController } from './AdaptiveLightingController';
 // PostProcessingController import removed — no active effects, raw renderer.render() used directly.
 // FLOW_CONFIG import removed — was only used by the now-deleted COLORS object.
@@ -187,6 +187,10 @@ export class World {
     // Truck edge lines for fade-in effect (EdgesGeometry)
     private truckEdgeLines: Map<string, THREE.LineSegments> = new Map();
 
+    // Background moon and stars elements for dark mode
+    private starsPoints: THREE.Points | null = null;
+    private moonMesh: THREE.Mesh | null = null;
+
     // Viewport dimensions for responsive centering
     private viewportWidth: number = window.innerWidth;
     private viewportHeight: number = window.innerHeight;
@@ -221,6 +225,9 @@ export class World {
         this.initCamera();
         this.initRenderer();
 
+        // Initialize simple moon and stars for dark mode
+        this.initStarsAndMoon();
+
         // Setup lighting and environment
         if (this.scene && this.renderer && this.camera) {
             const rig = setupLighting(this.scene, this.camera);
@@ -230,6 +237,9 @@ export class World {
                 ambient: rig.ambient,
                 rim: rig.backLight,
                 key: rig.keyLight,
+                fill: rig.fillLight,
+                top: rig.topLight,
+                scene: this.scene,
             });
 
             await loadHDREnvironment(this.renderer, this.scene, {
@@ -272,10 +282,24 @@ export class World {
             this.ambientSoundscape = AmbientSoundscape.getInstance();
             this.ambientSoundscape.init();
 
-            // Sync road lane colors whenever the theme changes
-            window.addEventListener('translink:theme-change', () => {
+            // Perform initial lighting update matching setup state
+            if (this.adaptiveLighting) {
+                this.adaptiveLighting.update(this.currentProgress);
+            }
+
+            // Sync road lane colors, terrain, materials, and lighting whenever the theme changes
+            window.addEventListener('translink:theme-change', (e: any) => {
+                const isDark = e.detail?.isDark ?? document.documentElement.classList.contains('dark');
                 this.roadSystem?.applyThemeColors();
                 this.terrainSystem?.applyThemeColors();
+                if (this.model) {
+                    applyThemeToMaterials(this.model, isDark);
+                }
+                if (this.adaptiveLighting) {
+                    this.adaptiveLighting.update(this.currentProgress);
+                }
+                this.updateStarsAndMoonTheme();
+                this.cameraSettledFrames = 0; // Wake up demand-based loop
             });
         }
 
@@ -635,8 +659,9 @@ export class World {
         this.animationId = requestAnimationFrame(this.animate);
 
         // Synchronize WebGL scene background with HTML theme state
+        let isCurrentlyDark = false;
         if (this.scene) {
-            const isCurrentlyDark = this.rootEl.classList.contains('dark');
+            isCurrentlyDark = this.rootEl.classList.contains('dark');
             const expectedColor = isCurrentlyDark ? 0x0c0e12 : 0xf5f1e8;
             const currentBgColor = this.scene.background as THREE.Color;
             if (currentBgColor && currentBgColor.getHex() !== expectedColor) {
@@ -658,8 +683,11 @@ export class World {
         // Wheel rotation is the only time-based animation — only active in truck window
         const hasWheelRotation = p >= 0.51 && p <= 0.71 && this.frontWheelPivots.length > 0;
 
+        // Stars twinkle in dark mode
+        const hasTwinklingStars = isCurrentlyDark && this.starsPoints && this.starsPoints.visible;
+
         // ── Early exit: nothing to update ────────────────────────────────────
-        if (!scrollChanged && !hasWheelRotation) {
+        if (!scrollChanged && !hasWheelRotation && !hasTwinklingStars) {
             // Camera may still be lerping toward its target even when scroll is idle.
             // Allow a few more frames to let it settle, then truly stop rendering.
             if (this.cameraSettledFrames >= World.CAMERA_SETTLE_FRAMES) {
@@ -703,6 +731,13 @@ export class World {
         // Spin wheel pivots (only when driving)
         if (hasWheelRotation) {
             this.frontWheelPivots.forEach((pivot) => (pivot.rotation.z -= 3.0 * delta));
+        }
+
+        // Twinkle stars in dark mode
+        if (hasTwinklingStars) {
+            const time = currentTime * 0.001;
+            const mat = this.starsPoints!.material as THREE.PointsMaterial;
+            mat.opacity = 0.50 + Math.sin(time * 1.5) * 0.20;
         }
 
         // Update S4-1b Audio
@@ -1121,6 +1156,138 @@ export class World {
         return this.camera;
     }
 
+    /**
+     * Initializes stars and moon in the background sky dome.
+     * Features a soft glowing 3D moon with an additive atmospheric halo,
+     * and a deep field of glittering stars.
+     */
+    private initStarsAndMoon(): void {
+        if (!this.scene) return;
+
+        // 1. Create Starfield Points
+        const starCount = 350;
+        const starGeometry = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(starCount * 3);
+
+        for (let i = 0; i < starCount; i++) {
+            // Distribute stars far away in the sky dome (upper hemisphere)
+            const r = 25 + Math.random() * 15;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(Math.random() * 0.7); // Upper hemisphere (Y > 0)
+
+            const x = r * Math.sin(phi) * Math.sin(theta);
+            const y = r * Math.cos(phi) + 1.0; // Pushed up slightly
+            const z = r * Math.sin(phi) * Math.cos(theta);
+
+            starPositions[i * 3] = x;
+            starPositions[i * 3 + 1] = y;
+            starPositions[i * 3 + 2] = z;
+        }
+
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+
+        const starMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.18,
+            transparent: true,
+            opacity: 0.0, // starts at 0; updated dynamically
+            sizeAttenuation: true,
+            depthWrite: false,
+            depthTest: true,
+        });
+
+        this.starsPoints = new THREE.Points(starGeometry, starMaterial);
+        this.starsPoints.name = 'starfield';
+        this.scene.add(this.starsPoints);
+
+        // 2. Create Glowing Crescent Moon in the deep background
+        const moonGeo = new THREE.PlaneGeometry(1.6, 1.6);
+        const moonMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uOpacity: { value: 0.0 },
+                uColor: { value: new THREE.Color(0xfefefe) },
+                uHaloColor: { value: new THREE.Color(0x06b6d4) },
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float uOpacity;
+                uniform vec3 uColor;
+                uniform vec3 uHaloColor;
+                varying vec2 vUv;
+
+                void main() {
+                    // Center of main moon circle
+                    vec2 center1 = vec2(0.5, 0.5);
+                    // Offset center for the mask to create a crescent/quarter shape on the right
+                    vec2 center2 = vec2(0.34, 0.64);
+
+                    float dist1 = distance(vUv, center1);
+                    float dist2 = distance(vUv, center2);
+
+                    // Anti-aliased boundaries
+                    float moon = smoothstep(0.40, 0.38, dist1);
+                    float mask = smoothstep(0.36, 0.39, dist2);
+
+                    float alpha = moon * mask;
+
+                    // Soft atmospheric glow around the crescent
+                    float glow = smoothstep(0.48, 0.20, dist1) * 0.35;
+                    
+                    vec3 finalColor = mix(uColor, uHaloColor, glow * 0.45);
+                    float finalAlpha = max(alpha, glow * 0.20) * uOpacity;
+
+                    if (finalAlpha < 0.001) {
+                        discard;
+                    }
+
+                    gl_FragColor = vec4(finalColor, finalAlpha);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            depthTest: true,
+        });
+
+        this.moonMesh = new THREE.Mesh(moonGeo, moonMat);
+        // Positioned far away, integrated naturally within the starfield depth sphere (radius ~32)
+        this.moonMesh.position.set(-13, 11, -26);
+        this.moonMesh.name = 'moon';
+        this.moonMesh.lookAt(0, 0, 0); // Faces the camera target region directly
+
+        this.scene.add(this.moonMesh);
+
+        // Sync initial state
+        this.updateStarsAndMoonTheme();
+    }
+
+    /**
+     * Updates visibility and opacity of the stars and moon based on active theme
+     */
+    private updateStarsAndMoonTheme(): void {
+        const isDark = this.rootEl.classList.contains('dark');
+
+        if (this.moonMesh) {
+            this.moonMesh.visible = isDark;
+            const mat = this.moonMesh.material as THREE.ShaderMaterial;
+            if (mat && mat.uniforms && mat.uniforms.uOpacity) {
+                mat.uniforms.uOpacity.value = isDark ? 0.95 : 0.0;
+            }
+        }
+
+        if (this.starsPoints) {
+            this.starsPoints.visible = isDark;
+            const mat = this.starsPoints.material as THREE.PointsMaterial;
+            mat.opacity = isDark ? 0.75 : 0.0;
+            mat.needsUpdate = true;
+        }
+    }
+
     // Bound resize handler stored so it can be properly removed in destroy()
     private readonly boundOnResize = this.onResize.bind(this);
 
@@ -1135,6 +1302,25 @@ export class World {
         this.truckMeshGroup = null;
         this.frontWheelPivots = [];
         window.removeEventListener('resize', this.boundOnResize);
+        
+        if (this.starsPoints) {
+            this.scene?.remove(this.starsPoints);
+            this.starsPoints.geometry.dispose();
+            (this.starsPoints.material as THREE.Material).dispose();
+            this.starsPoints = null;
+        }
+        if (this.moonMesh) {
+            this.scene?.remove(this.moonMesh);
+            this.moonMesh.geometry.dispose();
+            (this.moonMesh.material as THREE.Material).dispose();
+            if (this.moonMesh.children.length > 0) {
+                const halo = this.moonMesh.children[0] as THREE.Mesh;
+                halo.geometry.dispose();
+                (halo.material as THREE.Material).dispose();
+            }
+            this.moonMesh = null;
+        }
+
         if (this.renderer) {
             this.renderer.dispose();
             if (this.container?.parentNode) this.container.parentNode.removeChild(this.container);

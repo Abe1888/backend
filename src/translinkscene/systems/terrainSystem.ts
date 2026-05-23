@@ -101,14 +101,18 @@ export class TerrainSystem {
         const material = new THREE.ShaderMaterial({
             uniforms: {
                 uBgColor: { value: new THREE.Color() },
-                uTerrainColor: { value: new THREE.Color() },
+                uValleyColor: { value: new THREE.Color() },
+                uPeakColor: { value: new THREE.Color() },
                 uOpacity: { value: 1.0 },
+                uIsDark: { value: 0.0 },
             },
             vertexShader: `
+                varying vec3 vNormal;
                 varying vec3 vLocalPos;
                 varying vec3 vViewPosition;
 
                 void main() {
+                    vNormal = normalize(normalMatrix * normal);
                     vLocalPos = position;
                     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                     vViewPosition = -mvPosition.xyz;
@@ -117,25 +121,26 @@ export class TerrainSystem {
             `,
             fragmentShader: `
                 uniform vec3 uBgColor;
-                uniform vec3 uTerrainColor;
+                uniform vec3 uValleyColor;
+                uniform vec3 uPeakColor;
                 uniform float uOpacity;
+                uniform float uIsDark;
 
+                varying vec3 vNormal;
                 varying vec3 vLocalPos;
                 varying vec3 vViewPosition;
 
                 void main() {
                     // 1. Edge Border Dissolve (Fade out grid edges)
-                    // local X goes from -30.0 to 30.0, Z goes from -40.0 to 40.0
                     float edgeX = abs(vLocalPos.x) / 30.0;
                     float edgeZ = abs(vLocalPos.z) / 40.0;
                     float edgeFade = smoothstep(1.0, 0.65, max(edgeX, edgeZ));
 
                     // 2. Road Masking (Ensure road system is completely clean and dominant)
-                    // Completely transparent right under the road, fading back in gracefully
                     float distToRoad = abs(vLocalPos.z);
                     float roadFade = smoothstep(1.5, 9.0, distToRoad);
 
-                    // 3. Camera Depth Fog (Near-fade to avoid sharp/harsh mesh lines, Far-fade for horizon)
+                    // 3. Camera Depth Fog (Near-fade, Far-fade)
                     float dist = length(vViewPosition);
                     float nearFade = smoothstep(0.4, 3.5, dist);
                     float farFade = 1.0 - smoothstep(10.0, 26.0, dist);
@@ -143,6 +148,19 @@ export class TerrainSystem {
                     // 4. Height Valley Suppression (Softly dim valleys, keep peaks clean)
                     float heightFade = smoothstep(-0.6, 1.2, vLocalPos.y);
                     heightFade = mix(0.18, 1.0, heightFade);
+
+                    // 5. Height-based Color Gradient
+                    float heightT = smoothstep(-0.25, 0.65, vLocalPos.y);
+                    vec3 baseColor = mix(uValleyColor, uPeakColor, heightT);
+
+                    // 6. Simulated Studio Lighting Highlight (Top-right Key Light reflection)
+                    vec3 normal = normalize(vNormal);
+                    vec3 lightDir = normalize(vec3(0.4, 0.9, 0.3)); // Aligned to setupLighting key light direction
+                    float ndl = max(dot(normal, lightDir), 0.0);
+                    
+                    // Brilliant highlight gradient
+                    vec3 shineColor = mix(uPeakColor, vec3(1.0, 1.0, 1.0), 0.5);
+                    vec3 finalColor = mix(baseColor, shineColor, ndl * (uIsDark > 0.5 ? 0.75 : 0.3));
 
                     // Combine all atmospheric modulators
                     float finalAlpha = edgeFade * roadFade * nearFade * farFade * heightFade * uOpacity;
@@ -152,7 +170,7 @@ export class TerrainSystem {
                     }
 
                     // Render with beautiful dynamic opacity blending
-                    gl_FragColor = vec4(uTerrainColor, finalAlpha);
+                    gl_FragColor = vec4(finalColor, finalAlpha);
                 }
             `,
             wireframe: true,
@@ -211,11 +229,14 @@ export class TerrainSystem {
 
         const mat = this.terrainMesh.material as THREE.ShaderMaterial;
         const colorBg = new THREE.Color(isDark ? 0x0c0e12 : 0xf5f1e8);
-        const colorTerrain = new THREE.Color(isDark ? this.COLOR_DARK : this.COLOR_LIGHT);
+        const colorValley = new THREE.Color(isDark ? 0x111622 : 0x8a8578);
+        const colorPeak = new THREE.Color(isDark ? 0x06b6d4 : 0xc7bead);
 
         mat.uniforms.uBgColor.value.copy(colorBg);
-        mat.uniforms.uTerrainColor.value.copy(colorTerrain);
+        mat.uniforms.uValleyColor.value.copy(colorValley);
+        mat.uniforms.uPeakColor.value.copy(colorPeak);
         mat.uniforms.uOpacity.value = baseOpacity * this.currentOpacityMultiplier;
+        mat.uniforms.uIsDark.value = isDark ? 1.0 : 0.0;
     }
 
     /**
