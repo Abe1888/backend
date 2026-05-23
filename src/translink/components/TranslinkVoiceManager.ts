@@ -62,6 +62,17 @@ export class TranslinkVoiceManager {
     private micRequestedAt = 0;
     private firstAudioReceivedAt = 0;
 
+    /* ── Jitter Buffer ───────────────────────────────────────────────────────
+     * Incoming audio chunks are pushed into a queue and drained in order
+     * using the Web Audio API scheduler. A 200 ms lookahead is applied before
+     * the first chunk of every turn so that network jitter bursts can be
+     * absorbed before playback begins, eliminating clicks, pops, and speed-ups.
+     */
+    private audioQueue: Array<AudioBuffer> = [];
+    private isPlayingQueue = false;
+    /** ms to pre-buffer before playing the first chunk of a new turn */
+    private readonly JITTER_LOOKAHEAD_MS = 200;
+
     /* ── Reconnect / Timeout State ──────────────────────────────────────────────
      * Render free-tier services cold-start in 30–90 s; the connection timeout
      * and exponential-backoff reconnect give the server time to wake before
@@ -147,6 +158,7 @@ export class TranslinkVoiceManager {
             }
 
             const lang = TranslinkLanguageController.getInstance().getLanguage();
+            const visitorName = localStorage.getItem('translink_visitor_name') || '';
             let wsUrl = '';
             
             /* When VITE_WS_BACKEND_URL is set (production split-host deployment),
@@ -182,6 +194,10 @@ export class TranslinkVoiceManager {
                 wsUrl = `${protocol}//${window.location.host}/ws/live?lang=${encodeURIComponent(lang)}&welcome=${welcome}`;
             }
 
+            if (visitorName) {
+                wsUrl += `&visitorName=${encodeURIComponent(visitorName)}`;
+            }
+
             console.log('[VoiceManager] Connecting to WebSocket:', wsUrl);
             this.ws = new WebSocket(wsUrl);
 
@@ -214,6 +230,17 @@ export class TranslinkVoiceManager {
                         if (this.callbacks.onError) this.callbacks.onError(msg.error);
                         this.disconnect();
                         return;
+                    }
+
+                    if (msg.visitorName) {
+                        localStorage.setItem('translink_visitor_name', msg.visitorName);
+                        console.log('[VoiceManager] Visitor name saved from server:', msg.visitorName);
+                        window.dispatchEvent(new CustomEvent('translink:visitor-name-updated', { detail: msg.visitorName }));
+                    }
+
+                    if (msg.leadSubmitted) {
+                        console.log('[VoiceManager] Lead submission confirmed by server.');
+                        window.dispatchEvent(new CustomEvent('translink:lead-submitted'));
                     }
 
                     if (msg.setupComplete) {
@@ -302,7 +329,7 @@ export class TranslinkVoiceManager {
         this.reconnectAttempts = 0;
 
         this._stopMicrophone();
-        this._stopPlayback();
+        this._stopPlayback(); // also flushes audioQueue and resets isPlayingQueue
         this._turnCompleteReceived = false;
         this.pendingInputSamples = [];
         this.speechFrameCount = 0;
@@ -511,6 +538,17 @@ export class TranslinkVoiceManager {
     }
 
     private _playAudioChunk(base64Audio: string): void {
+        // ── Late-arrival guard ──────────────────────────────────────────────
+        // Discard any audio packets that arrive after an interruption. The
+        // server-side flag stops sending, but in-flight WebSocket frames can
+        // still arrive for a brief window. Dropping them here ensures they
+        // never trigger unexpected playback or corrupt the playback schedule.
+        if (this.state !== 'speaking' && this.state !== 'connecting') {
+            console.warn('[VoiceManager] Discarding late-arriving audio packet post-interruption (state:', this.state, ')');
+            this._emitMetric('late_audio_discarded');
+            return;
+        }
+
         if (!this.audioCtx) return;
         this._turnCompleteReceived = false;
 
@@ -522,16 +560,6 @@ export class TranslinkVoiceManager {
         const buffer = this.audioCtx.createBuffer(1, float32Data.length, OUTPUT_SAMPLE_RATE);
         buffer.getChannelData(0).set(float32Data);
 
-        const source = this.audioCtx.createBufferSource();
-        source.buffer = buffer;
-        if (this.playbackAnalyser) {
-            source.connect(this.playbackAnalyser);
-        } else {
-            source.connect(this.audioCtx.destination);
-        }
-
-        const LOOKAHEAD = 0.05;
-        const startTime = Math.max(this.audioCtx.currentTime + LOOKAHEAD, this.nextStartTime);
         if (!this.hasStartedPlayback) {
             this.hasStartedPlayback = true;
             this._emitMetric('first_playback_scheduled');
@@ -540,22 +568,83 @@ export class TranslinkVoiceManager {
             }
         }
 
+        this._enqueueAudioBuffer(buffer);
+    }
+
+    /**
+     * Push a decoded AudioBuffer into the jitter queue and start the drain
+     * scheduler if it is not already running.
+     *
+     * On the very first chunk of a new turn we apply a JITTER_LOOKAHEAD_MS
+     * (200 ms) pre-buffer window so that any burst of out-of-order network
+     * packets can be absorbed before playback begins, preventing the robotic
+     * speed-up artefacts caused by audio-clock gaps.
+     */
+    private _enqueueAudioBuffer(buffer: AudioBuffer): void {
+        this.audioQueue.push(buffer);
+        this._emitMetric('jitter_queue_depth', this.audioQueue.length);
+
+        if (!this.isPlayingQueue) {
+            this.isPlayingQueue = true;
+            // Apply lookahead only at the start of a new turn
+            const lookaheadSeconds = this.JITTER_LOOKAHEAD_MS / 1000;
+            if (this.audioCtx) {
+                // Seed nextStartTime to absorb jitter before first chunk plays
+                this.nextStartTime = this.audioCtx.currentTime + lookaheadSeconds;
+            }
+            this._drainAudioQueue();
+        }
+    }
+
+    /**
+     * Drain the jitter buffer queue by scheduling each AudioBuffer back-to-back
+     * on the Web Audio clock. When the queue empties and the turn is complete,
+     * transition state back to listening.
+     */
+    private _drainAudioQueue(): void {
+        if (!this.audioCtx || this.audioQueue.length === 0) {
+            // Queue exhausted
+            this.isPlayingQueue = false;
+            if (this._turnCompleteReceived && this.state === 'speaking') {
+                this._changeState('listening');
+            }
+            return;
+        }
+
+        const buffer = this.audioQueue.shift()!;
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = buffer;
+
+        if (this.playbackAnalyser) {
+            source.connect(this.playbackAnalyser);
+        } else {
+            source.connect(this.audioCtx.destination);
+        }
+
+        // Pin the start time to the audio clock — never allow gaps
+        const startTime = Math.max(this.audioCtx.currentTime, this.nextStartTime);
+        this.nextStartTime = startTime + buffer.duration;
+
         this.activeAudioSources.add(source);
         this._emitMetric('playback_queue_depth', this.activeAudioSources.size);
+
         source.onended = () => {
             this.activeAudioSources.delete(source);
             this._emitMetric('playback_queue_depth', this.activeAudioSources.size);
-            if (this.activeAudioSources.size === 0 && this._turnCompleteReceived && this.state === 'speaking') {
-                this._changeState('listening');
-            }
+            // Schedule the next chunk immediately on the audio event thread
+            this._drainAudioQueue();
         };
 
         source.start(startTime);
-        this.nextStartTime = startTime + buffer.duration;
     }
 
     private _stopPlayback(): void {
         this._turnCompleteReceived = false;
+        // ── Jitter buffer teardown ──────────────────────────────────────────
+        // Flush the pending queue so no buffered chunks play after interruption
+        this.audioQueue = [];
+        this.isPlayingQueue = false;
+        // ────────────────────────────────────────────────────────────────────
         this.activeAudioSources.forEach((src) => {
             try {
                 src.stop();
@@ -566,7 +655,7 @@ export class TranslinkVoiceManager {
         if (this.audioCtx) {
             this.nextStartTime = this.audioCtx.currentTime;
         }
-        console.log('[VoiceManager] Playback interrupted');
+        console.log('[VoiceManager] Playback interrupted and jitter queue flushed');
     }
 
     isConnected(): boolean {

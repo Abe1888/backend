@@ -9,9 +9,16 @@
  * 3. Multi-tier memory systems (Short-term context, Long-term localStorage persistence).
  * 4. High-fidelity semantic memory indexing for all 10 Translink sections.
  * 5. Event-driven updates and memory retrieval/cleanup.
+ *
+ * Knowledge Source Architecture:
+ * - The canonical company knowledge is maintained in `translinkconfig/live-voice/knowledge.md`.
+ * - It is imported at build time via Vite's `?raw` suffix (zero runtime cost).
+ * - This eliminates duplication — no hardcoded knowledge strings in this file.
+ * - The same `knowledge.md` is also read server-side by `GeminiLiveService.ts`.
  */
 
 import { TranslinkLanguageController } from '../controllers/TranslinkLanguageController';
+import knowledgeMarkdown from '../../translinkconfig/live-voice/knowledge.md?raw';
 
 export interface SemanticMemoryNode {
     id: string;
@@ -45,19 +52,13 @@ export interface LongTermMemory {
 }
 
 export class TranslinkAIBrain {
-    // Foundational company-wide knowledge base extracted from knowledge.md
-    private websiteKnowledgeBase = `
-TRANSLINK SOLUTIONS PLC — YOUR ONE STOP SOLUTION (FLEET TELEMATICS & IOT SOLUTIONS)
-[Core Profile & Identity]
-Entity Name: Translink Solutions PLC (also known as Translink Telematics) — Your ONE STOP SOLUTION for Fleet Telematics.
-Base: Headquarters in Kera, SD Building, Office 404, Addis Ababa, Ethiopia. Operations spanning all of East Africa.
-Accreditations: Fully licensed by the Ethiopian Communications Authority (ECA) for import & support of IoT/GPS hardware; Federal Transport Authority (FTA) Certified Speed Limiter installer; Ethiopian Standards Agency (ESA) Compliant.
-Key Services: GPS Real-Time Fleet Tracking, High-Precision Fuel Monitoring & Theft Prevention, certified Speed Limiters, AI Video Telematics (ADAS & DMS), Electronic Cargo Tracking (ECTS), BLE Sensor Networks, and Fleet Maintenance.
-Target Sectors: Logistics, Construction & Earthmoving, FMCG & Distribution, Manufacturing & Industrial Parks.
-Web Portals: tracking.translinket.com (Real-Time tracking) | fms.translinket.com (Fuel & fleet FMS portal).
-Mobile App: Translink Pro on Android (Google Play Store).
-Contact: +251 11 882 9090 / +251 11 882 9191 | support@translink.et
-`;
+    /**
+     * Company-wide knowledge base — imported at build time from the canonical
+     * source file `translinkconfig/live-voice/knowledge.md` via Vite `?raw`.
+     * Single source of truth: update knowledge.md, both client and server
+     * automatically consume the latest content.
+     */
+    private websiteKnowledgeBase: string = knowledgeMarkdown;
 
     // Semantic Memory Database for all 10 sections aligned to Fleet Telematics & IoT
     private semanticIndex: { [key: string]: SemanticMemoryNode } = {
