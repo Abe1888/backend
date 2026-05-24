@@ -50,41 +50,272 @@ export class TranslinkLiveFeedPopup {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(-360deg); }
             }
+            
+            /* HUD Core Panel Framework */
+            .hud-frame {
+                position: relative;
+                border-radius: 0px;
+                overflow: hidden;
+                transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+            
+            /* Dark Mode: Red HUD Theme */
+            html.dark .hud-frame {
+                background: rgba(10, 0, 0, 0.98);
+                border: 2px solid #ef4444;
+                box-shadow: 
+                    0 25px 50px -12px rgba(0, 0, 0, 0.95);
+                --theme-hud-accent: #ef4444;
+                --theme-hud-grid-color: rgba(239, 68, 68, 0.45);
+            }
+            html.dark .hud-frame:hover {
+                border-color: #ff0000;
+                box-shadow: 
+                    0 30px 60px -10px rgba(0, 0, 0, 0.98);
+            }
+
+            /* Light Mode: Black HUD Theme */
+            html:not(.dark) .hud-frame {
+                background: rgba(252, 251, 250, 0.96);
+                border: 2px solid #161616;
+                box-shadow: 
+                    0 24px 55px -12px rgba(22, 22, 22, 0.18),
+                    0 4px 18px rgba(22, 22, 22, 0.06);
+                --theme-hud-accent: #161616;
+                --theme-hud-grid-color: rgba(22, 22, 22, 0.25);
+            }
+            html:not(.dark) .hud-frame:hover {
+                box-shadow: 
+                    0 32px 64px -10px rgba(22, 22, 22, 0.26);
+            }
+
+            /* HUD Corner Tech Brackets (L-shapes) */
+            .hud-bracket {
+                position: absolute;
+                width: 14px;
+                height: 14px;
+                pointer-events: none;
+                z-index: 40;
+                transition: border-color 0.4s ease;
+            }
+            .bracket-tl { top: 0; left: 0; border-top: 3px solid transparent; border-left: 3px solid transparent; }
+            .bracket-tr { top: 0; right: 0; border-top: 3px solid transparent; border-right: 3px solid transparent; }
+            .bracket-bl { bottom: 0; left: 0; border-bottom: 3px solid transparent; border-left: 3px solid transparent; }
+            .bracket-br { bottom: 0; right: 0; border-bottom: 3px solid transparent; border-right: 3px solid transparent; }
+
+            html.dark .hud-bracket {
+                border-color: #ff0000;
+            }
+            html:not(.dark) .hud-bracket {
+                border-color: #161616;
+            }
+
+            /* Hologram Scanline Sweeper */
             .hologram-scan {
                 position: absolute;
                 left: 0;
                 width: 100%;
-                height: 5px;
-                background: linear-gradient(180deg, transparent, rgba(0, 210, 255, 0.35), transparent);
-                box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
-                animation: scanningLine 3.5s linear infinite;
+                height: 6px;
+                animation: scanningLine 3.2s linear infinite;
                 pointer-events: none;
                 z-index: 5;
+                transition: background 0.4s, box-shadow 0.4s;
             }
-            .glow-cyan {
+            html.dark .hologram-scan {
+                background: linear-gradient(180deg, transparent, rgba(239, 68, 68, 0.45), transparent);
+                box-shadow: none;
+            }
+            html:not(.dark) .hologram-scan {
+                background: linear-gradient(180deg, transparent, rgba(22, 22, 22, 0.25), transparent);
+                box-shadow: 0 0 8px rgba(22, 22, 22, 0.4);
+            }
+
+            /* Glow text styling */
+            .hud-glow-text {
+                transition: color 0.4s;
+            }
+            html.dark .hud-glow-text {
+                color: #ff3b3b;
                 text-shadow: none;
             }
-            .glow-crimson {
+            html:not(.dark) .hud-glow-text {
+                color: #161616;
                 text-shadow: none;
             }
-            html.dark .glow-cyan {
-                text-shadow: 0 0 10px rgba(0, 210, 255, 0.35);
+
+            /* Technical Reticles */
+            .hud-reticle-circle {
+                transition: border-color 0.4s;
             }
-            html.dark .glow-crimson {
-                text-shadow: 0 0 10px rgba(192, 32, 47, 0.5);
+            html.dark .hud-reticle-circle {
+                border-color: rgba(239, 68, 68, 0.45) !important;
             }
+            html:not(.dark) .hud-reticle-circle {
+                border-color: rgba(22, 22, 22, 0.15) !important;
+            }
+
+            /* Technical Crosshair Lines */
+            .hud-crosshair-line {
+                transition: background 0.4s;
+            }
+            html.dark .hud-crosshair-line {
+                background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.45), transparent) !important;
+            }
+            html:not(.dark) .hud-crosshair-line {
+                background: linear-gradient(90deg, transparent, rgba(22, 22, 22, 0.15), transparent) !important;
+            }
+            .hud-crosshair-line-v {
+                transition: background 0.4s;
+            }
+            html.dark .hud-crosshair-line-v {
+                background: linear-gradient(180deg, transparent, rgba(239, 68, 68, 0.45), transparent) !important;
+            }
+            html:not(.dark) .hud-crosshair-line-v {
+                background: linear-gradient(180deg, transparent, rgba(22, 22, 22, 0.15), transparent) !important;
+            }
+
+            /* Coordinate labels */
+            .hud-coords {
+                transition: color 0.4s;
+            }
+            html.dark .hud-coords {
+                color: #ef4444 !important;
+                opacity: 1;
+            }
+            html:not(.dark) .hud-coords {
+                color: rgba(22, 22, 22, 0.5);
+            }
+
+            /* Top Bar and Metadata */
+            .hud-top-meta {
+                transition: color 0.4s;
+            }
+            html.dark .hud-top-meta {
+                color: #ef4444 !important;
+                opacity: 1;
+            }
+            html:not(.dark) .hud-top-meta {
+                color: rgba(22, 22, 22, 0.7);
+            }
+
+            /* Bottom Panel (Technical Text Container) */
+            .hud-info-panel {
+                transition: background-color 0.4s, border-color 0.4s;
+            }
+            html.dark .hud-info-panel {
+                background: rgba(18, 2, 2, 0.9) !important;
+                border: 1px solid rgba(239, 68, 68, 0.35) !important;
+            }
+            html:not(.dark) .hud-info-panel {
+                background: rgba(240, 240, 240, 0.75) !important;
+                border: 1px solid rgba(22, 22, 22, 0.1) !important;
+            }
+
+            /* Live status ticker text */
+            .hud-status-ticker {
+                transition: color 0.4s;
+            }
+            html.dark .hud-status-ticker {
+                color: #ff3b3b !important;
+            }
+            html:not(.dark) .hud-status-ticker {
+                color: #161616;
+            }
+
+            /* Status pulsing dot */
+            html.dark .hud-status-dot {
+                background-color: #ff0000 !important;
+                box-shadow: none;
+            }
+            html:not(.dark) .hud-status-dot {
+                background-color: #161616 !important;
+                box-shadow: none;
+            }
+
+            /* Futuristic Capsule Tags */
+            .hud-tag {
+                transition: all 0.3s ease;
+            }
+            html.dark .hud-tag {
+                background: transparent;
+                color: #ef4444;
+                border: 1.5px solid #ef4444;
+            }
+            html.dark .hud-tag:hover {
+                background: #ef4444;
+                color: #ffffff;
+                border-color: #ef4444;
+            }
+            html:not(.dark) .hud-tag {
+                background: transparent;
+                color: #161616;
+                border: 1px solid rgba(22, 22, 22, 0.3);
+            }
+            html:not(.dark) .hud-tag:hover {
+                background: #161616;
+                color: #ffffff;
+                border-color: #161616;
+            }
+
+            /* Bottom progress loading bar */
+            .hud-progress-fill {
+                transition: all 1s ease;
+            }
+            html.dark .hud-progress-fill {
+                background: #ef4444;
+                box-shadow: none;
+            }
+            html:not(.dark) .hud-progress-fill {
+                background: #161616;
+                box-shadow: none;
+            }
+
+            /* Close Button Styling */
+            .hud-close-btn {
+                transition: all 0.3s ease;
+            }
+            html.dark .hud-close-btn {
+                background: rgba(12, 2, 2, 0.95);
+                border: 2px solid #ef4444;
+                color: #ef4444;
+            }
+            html.dark .hud-close-btn:hover {
+                background: #ef4444;
+                color: #ffffff;
+                border-color: #ef4444;
+                box-shadow: none;
+            }
+            html:not(.dark) .hud-close-btn {
+                background: rgba(255, 255, 255, 0.9);
+                border: 2.5px solid #161616;
+                color: #161616;
+            }
+            html:not(.dark) .hud-close-btn:hover {
+                background: #161616;
+                color: #ffffff;
+                border-color: #161616;
+            }
+
+            /* Body Text scrollbar adjustments */
             .hud-desc-scroll::-webkit-scrollbar {
                 width: 3px;
             }
             .hud-desc-scroll::-webkit-scrollbar-track {
                 background: transparent;
             }
-            .hud-desc-scroll::-webkit-scrollbar-thumb {
-                background: rgba(148, 163, 184, 0.3);
+            html.dark .hud-desc-scroll::-webkit-scrollbar-thumb {
+                background: rgba(239, 68, 68, 0.35);
                 border-radius: 2px;
             }
-            .hud-desc-scroll::-webkit-scrollbar-thumb:hover {
-                background: rgba(192, 32, 47, 0.6);
+            html.dark .hud-desc-scroll::-webkit-scrollbar-thumb:hover {
+                background: rgba(239, 68, 68, 0.75);
+            }
+            html:not(.dark) .hud-desc-scroll::-webkit-scrollbar-thumb {
+                background: rgba(22, 22, 22, 0.3);
+                border-radius: 2px;
+            }
+            html:not(.dark) .hud-desc-scroll::-webkit-scrollbar-thumb:hover {
+                background: rgba(22, 22, 22, 0.7);
             }
         `;
         document.head.appendChild(style);
@@ -231,46 +462,52 @@ export class TranslinkLiveFeedPopup {
             const tags = lang.tArray(config.tags);
 
             popup.innerHTML = `
-                <div class="hud-frame relative flex flex-col w-full h-full bg-[#fcfbfa]/96 dark:bg-[#07090f]/90 backdrop-blur-2xl rounded-2xl p-2.5 overflow-hidden shadow-[0_24px_55px_-12px_rgba(22,22,22,0.08),0_4px_18px_rgba(22,22,22,0.03)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.95),0_0_40px_rgba(0,210,255,0.02)] group transition-all duration-500 hover:shadow-[0_32px_64px_-10px_rgba(22,22,22,0.14)] dark:hover:shadow-[0_36px_72px_-12px_rgba(0,0,0,0.98),0_0_50px_rgba(192,32,47,0.1)] hover:-translate-y-1" style="transform-style: preserve-3d;">
+                <div class="hud-frame relative flex flex-col w-full h-full backdrop-blur-2xl p-2.5 overflow-hidden group hover:-translate-y-1 transition-all duration-500" style="transform-style: preserve-3d;">
                     
+                    <!-- HUD Corner Brackets -->
+                    <div class="hud-bracket bracket-tl"></div>
+                    <div class="hud-bracket bracket-tr"></div>
+                    <div class="hud-bracket bracket-bl"></div>
+                    <div class="hud-bracket bracket-br"></div>
+
                     <!-- HUD Cyber Glow Ambient Aura -->
-                    <div class="absolute -inset-10 bg-gradient-to-tr from-[var(--brand-cyan)]/5 to-[var(--brand-crimson)]/5 blur-2xl opacity-40 pointer-events-none z-0"></div>
+                    <div class="absolute -inset-10 bg-gradient-to-tr from-transparent dark:via-red-500/5 to-transparent blur-2xl opacity-40 pointer-events-none z-0"></div>
 
                     <!-- HUD Technical Grid Overlay -->
-                    <div class="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style="background-image: radial-gradient(circle, #00d2ff 1px, transparent 1px); background-size: 16px 16px;"></div>
+                    <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.04] pointer-events-none z-0" style="background-image: radial-gradient(circle, var(--theme-hud-grid-color) 1px, transparent 1px); background-size: 16px 16px;"></div>
 
                     <!-- HUD Top Spec Readout Bar -->
-                    <div class="flex items-center justify-between px-3 py-2 text-[8.5px] font-mono text-slate-500 dark:text-[var(--brand-cyan)]/70 tracking-widest uppercase relative z-20">
+                    <div class="flex items-center justify-between px-3 py-2 text-[8.5px] font-mono tracking-widest uppercase relative z-20 hud-top-meta">
                         <div class="flex items-center gap-2 font-bold">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-[blinkDot_1.5s_infinite] shadow-[0_0_6px_#10b981]"></span>
+                            <span class="w-1.5 h-1.5 rounded-full hud-status-dot animate-[blinkDot_1.5s_infinite]"></span>
                             <span>TL-DIAG: SECURE</span>
                         </div>
-                        <div class="text-slate-400 dark:text-white/40 tracking-wider">SYS_REF_800X</div>
+                        <div class="opacity-60 tracking-wider">SYS_REF_800X</div>
                     </div>
 
                     <!-- HUD Diagnostic Connecting Path Node Markers -->
                     <svg class="absolute inset-0 w-full h-full pointer-events-none z-[5]" viewBox="0 0 100 160" fill="none">
                         <!-- Hardware Node Marker -->
-                        <circle cx="45" cy="40" r="1.8" stroke="var(--brand-crimson)" stroke-width="0.4" class="opacity-60"/>
-                        <circle cx="45" cy="40" r="0.6" fill="var(--brand-crimson)" class="opacity-80"/>
+                        <circle cx="45" cy="40" r="1.8" stroke="var(--theme-hud-accent)" stroke-width="0.4" class="opacity-60 transition-colors duration-300"/>
+                        <circle cx="45" cy="40" r="0.6" fill="var(--theme-hud-accent)" class="opacity-80 transition-colors duration-300"/>
                         <!-- Card Node Marker -->
-                        <circle cx="15" cy="95" r="1.8" stroke="var(--brand-crimson)" stroke-width="0.4" class="opacity-60"/>
-                        <circle cx="15" cy="95" r="0.6" fill="var(--brand-crimson)" class="opacity-80"/>
+                        <circle cx="15" cy="95" r="1.8" stroke="var(--theme-hud-accent)" stroke-width="0.4" class="opacity-60 transition-colors duration-300"/>
+                        <circle cx="15" cy="95" r="0.6" fill="var(--theme-hud-accent)" class="opacity-80 transition-colors duration-300"/>
                     </svg>
 
                     <!-- Top Section: Hardware Asset Viewer (52% height) -->
                     <div class="relative w-full h-[52%] flex items-center justify-center p-4 md:p-6 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] z-10 overflow-hidden" style="transform-style: preserve-3d;">
                         
                         <!-- Rotating High-Tech Reticle Background (Triple Concentric Rings) -->
-                        <div class="absolute w-[200px] h-[200px] rounded-full border border-dashed border-slate-300/40 dark:border-[var(--brand-cyan)]/10 animate-[spinClockwise_32s_linear_infinite] flex items-center justify-center pointer-events-none">
-                            <div class="w-[160px] h-[160px] rounded-full border border-slate-200/30 dark:border-[var(--brand-cyan)]/5"></div>
+                        <div class="absolute w-[200px] h-[200px] rounded-full border border-dashed hud-reticle-circle animate-[spinClockwise_32s_linear_infinite] flex items-center justify-center pointer-events-none">
+                            <div class="w-[160px] h-[160px] rounded-full border hud-reticle-circle opacity-60"></div>
                         </div>
-                        <div class="absolute w-[130px] h-[130px] rounded-full border border-dashed border-slate-300/30 dark:border-[var(--brand-crimson)]/8 animate-[spinCounterClockwise_16s_linear_infinite] pointer-events-none"></div>
-                        <div class="absolute w-[90px] h-[90px] rounded-full border border-dotted border-slate-300/50 dark:border-[var(--brand-cyan)]/15 animate-[spinClockwise_8s_linear_infinite] pointer-events-none"></div>
+                        <div class="absolute w-[130px] h-[130px] rounded-full border border-dashed hud-reticle-circle opacity-40 animate-[spinCounterClockwise_16s_linear_infinite] pointer-events-none"></div>
+                        <div class="absolute w-[90px] h-[90px] rounded-full border border-dotted hud-reticle-circle opacity-80 animate-[spinClockwise_8s_linear_infinite] pointer-events-none"></div>
                         
                         <!-- Crosshair Overlay Lines -->
-                        <div class="absolute w-[220px] h-[1px] bg-gradient-to-r from-transparent via-slate-300/50 dark:via-[var(--brand-cyan)]/15 to-transparent pointer-events-none"></div>
-                        <div class="absolute h-[220px] w-[1px] bg-gradient-to-b from-transparent via-slate-300/50 dark:via-[var(--brand-cyan)]/15 to-transparent pointer-events-none"></div>
+                        <div class="absolute w-[220px] h-[1px] hud-crosshair-line pointer-events-none"></div>
+                        <div class="absolute h-[220px] w-[1px] hud-crosshair-line-v pointer-events-none"></div>
 
                         <!-- Scanline Effect -->
                         <div class="hologram-scan"></div>
@@ -278,35 +515,35 @@ export class TranslinkLiveFeedPopup {
                         <img src="/images/servicescards/${config.img}" alt="${lang.t(config.title)}" class="max-w-[85%] max-h-[85%] object-contain pointer-events-none transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-108 group-hover:-translate-y-2 drop-shadow-[0_15px_25px_rgba(0,0,0,0.65)]" style="transform: translateZ(50px);">
                         
                         <!-- Dynamic Coordinate readouts (simulating active tracking ticks) -->
-                        <div class="hud-lat absolute top-4 left-4 font-mono text-[7.5px] text-slate-400 dark:text-[var(--brand-cyan)]/50 tracking-wider">
+                        <div class="hud-lat absolute top-4 left-4 font-mono text-[7.5px] tracking-wider hud-coords font-bold">
                             + 9.0128° N
                         </div>
-                        <div class="hud-lon absolute bottom-4 right-4 font-mono text-[7.5px] text-slate-400 dark:text-[var(--brand-cyan)]/50 tracking-wider">
+                        <div class="hud-lon absolute bottom-4 right-4 font-mono text-[7.5px] tracking-wider hud-coords font-bold">
                             + 38.7468° E
                         </div>
                     </div>
 
                     <!-- Bottom Section: Technical UI Text Panel (48% height) - Elevated Layered Depth -->
-                    <div class="relative w-full h-[48%] p-5 md:p-6 bg-slate-100/60 dark:bg-slate-900/45 backdrop-blur-md rounded-xl z-20 flex flex-col justify-between overflow-hidden shadow-sm dark:shadow-md" style="transform: translateZ(25px);">
+                    <div class="relative w-full h-[48%] p-5 md:p-6 backdrop-blur-md z-20 flex flex-col justify-between overflow-hidden shadow-sm dark:shadow-md hud-info-panel" style="transform: translateZ(25px);">
                         
                         <!-- Pulse Overlay Glow -->
-                        <div class="absolute inset-0 bg-gradient-to-b from-[var(--brand-cyan)]/5 to-transparent pointer-events-none z-0"></div>
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none z-0"></div>
 
                         <div class="flex flex-col h-full justify-between relative z-10">
                             <div>
                                 <!-- Header Status Row -->
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="font-mono text-[8px] tracking-[0.2em] text-[var(--brand-cyan)] font-extrabold uppercase flex items-center gap-1.5">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]"></span>
-                                        LIVE STREAMING: <span class="hz-ticker text-slate-700 dark:text-white/90 font-bold">59.8</span> HZ
+                                    <span class="font-mono text-[8px] tracking-[0.2em] font-extrabold uppercase flex items-center gap-1.5 hud-status-ticker">
+                                        <span class="w-1.5 h-1.5 rounded-full hud-status-dot animate-pulse"></span>
+                                        LIVE STREAMING: <span class="hz-ticker font-black">59.8</span> HZ
                                     </span>
                                     <div class="flex gap-1">
-                                        <span class="px-1.5 py-0.5 rounded-[3px] bg-[var(--brand-crimson)]/10 dark:bg-[var(--brand-crimson)]/20 text-[7px] font-mono text-[var(--brand-crimson)] font-bold tracking-widest">SECURE</span>
+                                        <span class="px-1.5 py-0.5 rounded-[3px] text-[7px] font-mono font-bold tracking-widest hud-tag">SECURE</span>
                                     </div>
                                 </div>
 
                                 <!-- Title -->
-                                <h3 class="font-outfit font-black text-xl md:text-2xl tracking-tight text-slate-900 dark:text-white mb-2 uppercase leading-none transition-colors duration-500 group-hover:text-[var(--brand-crimson)] glow-cyan group-hover:glow-crimson">${lang.t(config.title)}</h3>
+                                <h3 class="font-outfit font-black text-xl md:text-2xl tracking-tight mb-2 uppercase leading-none hud-glow-text transition-colors duration-500">${lang.t(config.title)}</h3>
                                 
                                 <!-- Futuristic Pill Tags (Borderless) -->
                                 <div class="flex flex-wrap gap-1.5 mb-2.5">
@@ -314,7 +551,7 @@ export class TranslinkLiveFeedPopup {
                                         .slice(0, 3)
                                         .map(
                                             (tag) => `
-                                        <span class="px-2 py-0.5 bg-slate-200/60 dark:bg-[var(--brand-cyan)]/10 rounded-[4px] text-[8px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-[var(--brand-cyan)] transition-all duration-300 hover:bg-[var(--brand-crimson)]/15 hover:text-slate-900 dark:hover:bg-[var(--brand-crimson)]/25 dark:hover:text-white cursor-default whitespace-nowrap">${tag}</span>
+                                        <span class="px-2 py-0.5 rounded-[4px] text-[8px] font-mono font-bold uppercase tracking-wider transition-all duration-300 cursor-default whitespace-nowrap hud-tag">${tag}</span>
                                     `
                                         )
                                         .join('')}
@@ -328,19 +565,19 @@ export class TranslinkLiveFeedPopup {
 
                             <!-- Bottom Diagnostic Bar -->
                             <div class="pt-2 mt-2">
-                                <div class="flex justify-between items-center text-[7.5px] font-mono text-slate-505 dark:text-slate-400 mb-1">
+                                <div class="flex justify-between items-center text-[7.5px] font-mono mb-1 hud-top-meta">
                                     <span>DATA LINK: SECURE</span>
-                                    <span class="text-[var(--brand-cyan)] font-extrabold animate-pulse">TRANSLINK CORE v3.0</span>
+                                    <span class="font-extrabold animate-pulse">TRANSLINK CORE v3.0</span>
                                 </div>
-                                <div class="w-full h-1.5 bg-black/10 dark:bg-black/40 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gradient-to-r from-[var(--brand-cyan)] to-[var(--brand-crimson)] rounded-full transition-all duration-1000 w-[85%] group-hover:w-[100%] shadow-[0_0_8px_rgba(0,210,255,0.4)]"></div>
+                                <div class="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-1000 w-[85%] group-hover:w-[100%] hud-progress-fill"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Close Trigger (Tech crosshair button - borderless) -->
-                    <button class="popup-close-trigger absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-300 bg-slate-200/80 hover:bg-slate-300/80 dark:bg-slate-900/80 dark:hover:bg-[var(--brand-crimson)]/30 rounded-full text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:rotate-90 z-[70] shadow-sm dark:shadow-[0_0_15px_rgba(192,32,47,0.15)] backdrop-blur-md">
+                    <button class="popup-close-trigger absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-300 rounded-full hover:rotate-90 z-[70] shadow-sm backdrop-blur-md hud-close-btn">
                         <svg width="10" height="10" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>
@@ -351,45 +588,54 @@ export class TranslinkLiveFeedPopup {
             // Default: Fallback card with sleek HUD styling
             popup.className = `${baseClasses} w-[92vw] max-w-[420px] bg-transparent`;
             popup.innerHTML = `
-                <div class="hud-frame relative flex flex-col w-full bg-[#fcfbfa]/96 dark:bg-[#07090f]/90 backdrop-blur-2xl rounded-2xl p-5 shadow-[0_24px_55px_-12px_rgba(22,22,22,0.08),0_4px_18px_rgba(22,22,22,0.03)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.95),0_0_40px_rgba(0,210,255,0.02)] group transition-all duration-500 hover:shadow-[0_32px_64px_-10px_rgba(22,22,22,0.14)] dark:hover:shadow-[0_36px_72px_-12px_rgba(0,0,0,0.98),0_0_50px_rgba(192,32,47,0.1)] hover:-translate-y-1" style="transform-style: preserve-3d;">
+                <div class="hud-frame relative flex flex-col w-full backdrop-blur-2xl p-5 group hover:-translate-y-1 transition-all duration-500" style="transform-style: preserve-3d;">
                     
+                    <!-- HUD Corner Brackets -->
+                    <div class="hud-bracket bracket-tl"></div>
+                    <div class="hud-bracket bracket-tr"></div>
+                    <div class="hud-bracket bracket-bl"></div>
+                    <div class="hud-bracket bracket-br"></div>
+
+                    <!-- HUD Technical Grid Overlay -->
+                    <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.04] pointer-events-none z-0" style="background-image: radial-gradient(circle, var(--theme-hud-grid-color) 1px, transparent 1px); background-size: 16px 16px;"></div>
+
                     <div class="flex flex-col gap-4 relative z-10 text-left" style="transform: translateZ(25px);">
                         <!-- Header Status Row -->
-                        <div class="flex items-center justify-between pb-2">
-                            <span class="font-mono text-[8px] tracking-[0.25em] text-slate-500 dark:text-[var(--brand-cyan)] font-extrabold uppercase">TL_SEC_GEN_SYS</span>
+                        <div class="flex items-center justify-between pb-2 hud-top-meta">
+                            <span class="font-mono text-[8px] tracking-[0.25em] font-extrabold uppercase">TL_SEC_GEN_SYS</span>
                             <div class="flex gap-1.5">
-                                <div class="w-1.5 h-1.5 bg-slate-400 dark:bg-[var(--brand-cyan)] rounded-full animate-pulse shadow-[0_0_5px_var(--brand-cyan)]"></div>
+                                <div class="w-1.5 h-1.5 rounded-full hud-status-dot animate-pulse"></div>
                             </div>
                         </div>
 
                         <!-- Title -->
-                        <h3 class="text-2xl font-outfit font-black uppercase tracking-tight text-slate-900 dark:text-white mb-1 group-hover:text-[var(--brand-crimson)] transition-colors duration-500 glow-cyan group-hover:glow-crimson">${this.title}</h3>
+                        <h3 class="text-2xl font-outfit font-black uppercase tracking-tight mb-1 hud-glow-text transition-colors duration-500">${this.title}</h3>
                         
                         <!-- Futuristic pill tags (borderless) -->
                         <div class="flex flex-wrap gap-1.5">
                             ${this.tags
                                 .map(
                                     (tag) => `
-                                <span class="px-2.5 py-0.5 bg-slate-200/60 dark:bg-[var(--brand-cyan)]/10 rounded-[4px] text-[8px] font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-[var(--brand-cyan)] transition-all duration-300 cursor-default whitespace-nowrap">${tag}</span>
+                                <span class="px-2.5 py-0.5 rounded-[4px] text-[8px] font-mono font-bold uppercase tracking-wider transition-all duration-300 cursor-default whitespace-nowrap hud-tag">${tag}</span>
                             `
                                 )
                                 .join('')}
                         </div>
 
                         <!-- Description -->
-                        <p class="hud-desc-scroll text-xs leading-relaxed text-slate-600 dark:text-slate-300 font-mono tracking-tight pr-1 overflow-y-auto max-h-[140px] scrollbar-thin scrollbar-track-transparent">
+                        <p class="hud-desc-scroll text-xs leading-relaxed text-slate-600 dark:text-slate-300 font-mono tracking-tight pr-1 overflow-y-auto max-h-[140px]">
                             ${this.description}
                         </p>
 
                         <!-- Bottom Diagnostic Bar -->
-                        <div class="pt-2.5 mt-1 flex justify-between items-center text-[7px] font-mono text-slate-500 dark:text-slate-400">
+                        <div class="pt-2.5 mt-1 flex justify-between items-center text-[7px] font-mono hud-top-meta">
                             <span>DATA LINK: SECURE</span>
-                            <span class="text-[var(--brand-cyan)] font-extrabold animate-pulse">TRANSLINK CORE v3.0</span>
+                            <span class="font-extrabold animate-pulse">TRANSLINK CORE v3.0</span>
                         </div>
                     </div>
 
                     <!-- Close Trigger (Borderless) -->
-                    <button class="popup-close-trigger absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-300 bg-slate-200/80 hover:bg-slate-300/80 dark:bg-slate-900/80 dark:hover:bg-[var(--brand-crimson)]/30 rounded-full text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:rotate-90 z-[70] shadow-sm dark:shadow-[0_0_15px_rgba(192,32,47,0.15)] backdrop-blur-md">
+                    <button class="popup-close-trigger absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-all duration-300 rounded-full hover:rotate-90 z-[70] shadow-sm backdrop-blur-md hud-close-btn">
                         <svg width="10" height="10" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         </svg>

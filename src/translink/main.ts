@@ -107,6 +107,14 @@ async function init() {
     new TranslinkClientLogoScroll().mount(app);
     new TranslinkCustomCursor().mount();
 
+    // Mount Developer Credit above the top right action icons
+    const credit = document.createElement('div');
+    credit.id = 'translink-developer-credit';
+    credit.className =
+        'fixed top-1 md:top-3 right-6 md:right-10 z-[var(--z-ui-global)] pointer-events-none select-none font-mono font-bold text-[8.5px] md:text-[10.5px] tracking-wider text-slate-900 dark:text-white text-right whitespace-nowrap opacity-100 transition-colors duration-400';
+    credit.textContent = '© Developed by TransLink Team — Contact: +251980424242';
+    app.appendChild(credit);
+
     // ── Step 5: Initialize GSAP animation pipeline after full layout render ───
     // Use document.fonts.ready + rAF instead of a brittle 500ms timeout.
     // This strictly ensures web fonts are loaded and layout is paint-committed
