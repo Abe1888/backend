@@ -95,6 +95,11 @@ if (isProduction) {
       },
     }));
 
+    // CMS route fallback — ensures /cms and /cms/ route to cms.html directly on refresh or direct access
+    app.get(/^\/cms(?:\/.*)?$/, (_req, res) => {
+      res.sendFile(path.join(distPath, 'cms.html'));
+    });
+
     // SPA fallback — Express 5 wildcard syntax
     app.get('*any', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

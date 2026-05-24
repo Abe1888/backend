@@ -9,9 +9,35 @@ import fs from 'fs';
 
 dotenv.config();
 
+function copyFolderSync(from: string, to: string) {
+  if (!fs.existsSync(from)) return;
+  fs.mkdirSync(to, { recursive: true });
+  fs.readdirSync(from).forEach((element) => {
+    const fromPath = path.join(from, element);
+    const toPath = path.join(to, element);
+    const stat = fs.lstatSync(fromPath);
+    if (stat.isFile()) {
+      fs.copyFileSync(fromPath, toPath);
+    } else if (stat.isDirectory()) {
+      copyFolderSync(fromPath, toPath);
+    }
+  });
+}
+
 function cmsPlugin() {
   return {
     name: 'cms-plugin',
+    closeBundle() {
+      // Copy translinkconfig to dist/src/translinkconfig for static copy fallbacks in production preview
+      const srcDir = path.resolve(__dirname, 'src', 'translinkconfig');
+      const destDir = path.resolve(__dirname, 'dist', 'src', 'translinkconfig');
+      try {
+        copyFolderSync(srcDir, destDir);
+        console.log('[CMS Plugin] Successfully copied translinkconfig files to dist/src/translinkconfig');
+      } catch (err: any) {
+        console.error('[CMS Plugin] Failed to copy translinkconfig to dist:', err.message);
+      }
+    },
     configureServer(server: any) {
       server.middlewares.use(async (req: any, res: any, next: any) => {
         const url = new URL(req.url || '', 'http://localhost');
