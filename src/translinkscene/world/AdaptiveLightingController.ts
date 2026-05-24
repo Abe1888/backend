@@ -64,8 +64,8 @@ export class AdaptiveLightingController {
         const lerpFactor = 0.08; // Smooth transitions
 
         // 1. Ambient Light
-        // In dark mode: dim to 0.12 to give depth. In light mode: 0.2 for soft fill.
-        const targetAmbientIntensity = isDark ? 0.12 : 0.20;
+        // In dark mode: lift to 0.24 to preserve volume fill. In light mode: 0.20 for soft fill.
+        const targetAmbientIntensity = isDark ? 0.24 : 0.20;
         if (this.ambientLight) {
             this.ambientLight.intensity = THREE.MathUtils.lerp(
                 this.ambientLight.intensity,
@@ -75,8 +75,8 @@ export class AdaptiveLightingController {
         }
 
         // 2. Rim Light (crimson brand red)
-        // In dark mode: boost to 0.95 for dramatic neon red edge outline. In light mode: subtle 0.25.
-        const targetRimIntensity = isDark ? 0.95 : 0.25;
+        // In dark mode: boost to 1.25 for crisp solid crimson edge outlines. In light mode: subtle 0.25.
+        const targetRimIntensity = isDark ? 1.25 : 0.25;
         if (this.rimLight) {
             this.rimLight.intensity = THREE.MathUtils.lerp(
                 this.rimLight.intensity,
@@ -110,10 +110,22 @@ export class AdaptiveLightingController {
             this.fillLight.color.lerp(targetFillColor, lerpFactor);
         }
 
-        // 5. Environment Intensity
-        // In dark mode: boost to 1.4 for stunning glossy/chrome reflections. In light mode: soft 0.6.
+        // 5. Top Light
+        // In dark mode: boost to 0.65 to create stunning specular contours on the cab roof, doors, and hood.
+        // In light mode: subtle 0.08.
+        const targetTopIntensity = isDark ? 0.65 : 0.08;
+        if (this.topLight) {
+            this.topLight.intensity = THREE.MathUtils.lerp(
+                this.topLight.intensity,
+                targetTopIntensity,
+                lerpFactor
+            );
+        }
+
+        // 6. Environment Intensity
+        // In dark mode: boost to 1.6 for stunning glossy reflections. In light mode: soft 0.6.
         if (this.scene) {
-            const targetEnvIntensity = isDark ? 1.4 : 0.6;
+            const targetEnvIntensity = isDark ? 1.6 : 0.6;
             const currentEnvIntensity = (this.scene as any).environmentIntensity ?? 0.6;
             (this.scene as any).environmentIntensity = THREE.MathUtils.lerp(
                 currentEnvIntensity,

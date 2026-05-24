@@ -270,6 +270,7 @@ export class World {
 
         // Setup truck mesh group from loaded model
         this.setupTruckMeshGroup();
+        this.updateTruckEdgesTheme(document.documentElement.classList.contains('dark'));
 
         // Setup scroll sync
         this.setupScrollSync();
@@ -301,6 +302,7 @@ export class World {
                 if (this.model) {
                     applyThemeToMaterials(this.model, isDark);
                 }
+                this.updateTruckEdgesTheme(isDark);
                 if (this.adaptiveLighting) {
                     this.adaptiveLighting.update(this.currentProgress);
                 }
@@ -366,11 +368,12 @@ export class World {
                 const isGlass = meshName.toLowerCase().includes('glass');
 
                 if (!isGlass) {
+                    const isDark = document.documentElement.classList.contains('dark');
                     const threshold = this.meshBehavior.getThreshold(meshName);
                     const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
 
                     const lineMat = new THREE.LineBasicMaterial({
-                        color: new THREE.Color('#29292a'),
+                        color: new THREE.Color(isDark ? 0x06b6d4 : 0xc7bead),
                         transparent: true,
                         opacity: 0,
                         depthWrite: false,
@@ -457,6 +460,19 @@ export class World {
                 }
 
                 this.frontWheelPivots.push(pivot);
+            }
+        });
+    }
+
+    /**
+     * Update truck edges color to match the terrain wireframe colors (0x06b6d4 in dark mode, 0xc7bead in light mode)
+     */
+    private updateTruckEdgesTheme(isDark: boolean): void {
+        const edgeColor = new THREE.Color(isDark ? 0x06b6d4 : 0xc7bead);
+        this.truckEdgeLines.forEach((lineSegments) => {
+            if (lineSegments && lineSegments.material) {
+                (lineSegments.material as THREE.LineBasicMaterial).color.copy(edgeColor);
+                (lineSegments.material as THREE.LineBasicMaterial).needsUpdate = true;
             }
         });
     }
@@ -891,6 +907,7 @@ export class World {
             RANGE = 0.02;
         const inFull = progress >= FUEL_TANK_START && progress <= FULL_END;
         const inTrans = progress > FULL_END && progress <= TRANS_END;
+        const inSecondary = progress >= 0.92 && progress <= 0.98;
 
         // PERFORMANCE: Filtered cache or direct refs used to avoid per-frame search
         ['Fuel_tank', 'Belt'].forEach((name) => {
@@ -901,17 +918,28 @@ export class World {
                 mesh.visible = false;
                 return;
             }
-            if (!inFull && !inTrans) {
+            if (!inFull && !inTrans && !inSecondary) {
                 mesh.visible = false;
                 return;
             }
-            let opacity = inFull
-                ? progress < 0.1
+            let opacity = 1.0;
+            if (inSecondary) {
+                if (progress < 0.93) {
+                    opacity = (progress - 0.92) / (0.93 - 0.92);
+                } else if (progress > 0.97) {
+                    opacity = 1.0 - (progress - 0.97) / (0.98 - 0.97);
+                } else {
+                    opacity = 1.0;
+                }
+            } else if (inFull) {
+                opacity = progress < 0.1
                     ? progress / 0.1
                     : progress > FULL_END - RANGE
                       ? 1.0 - ((progress - (FULL_END - RANGE)) / RANGE) * 0.9
-                      : 1.0
-                : 0.1;
+                      : 1.0;
+            } else {
+                opacity = 0.1;
+            }
             mesh.visible = opacity > 0.001;
             if (mesh.visible) this.setMeshOpacity(mesh, Math.max(0, Math.min(1, opacity)));
         });

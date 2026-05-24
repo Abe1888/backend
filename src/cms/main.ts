@@ -109,10 +109,18 @@ class TranslinkCMS {
             try {
                 const response = await fetch(devUrl);
                 if (!response.ok) throw new Error();
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    throw new Error('Received HTML instead of JSON');
+                }
                 return await response.json();
             } catch {
                 const response = await fetch(staticUrl);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    throw new Error('Received HTML instead of JSON');
+                }
                 return await response.json();
             }
         };
@@ -121,10 +129,18 @@ class TranslinkCMS {
             try {
                 const response = await fetch(devUrl);
                 if (!response.ok) throw new Error();
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    throw new Error('Received HTML instead of text');
+                }
                 return await response.text();
             } catch {
                 const response = await fetch(staticUrl);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    throw new Error('Received HTML instead of text');
+                }
                 return await response.text();
             }
         };

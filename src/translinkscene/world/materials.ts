@@ -162,12 +162,13 @@ export function applyThemeToMaterials(model: THREE.Group, isDark: boolean): void
             case 'Truck':
             case 'Cab_door':
             case 'Cab_Door_glass_frame':
-                mat.color.set(isDark ? '#12161f' : '#d8d4d0');
-                mat.roughness = isDark ? 0.15 : 0.95;
-                mat.metalness = isDark ? 0.9 : 0.0;
+                mat.color.set(isDark ? '#1d2330' : '#d8d4d0');
+                mat.roughness = isDark ? 0.24 : 0.95;
+                mat.metalness = isDark ? 0.72 : 0.0;
+                mat.envMapIntensity = isDark ? 2.6 : 0.5;
                 if ('clearcoat' in mat) {
                     mat.clearcoat = 1.0;
-                    mat.clearcoatRoughness = 0.05;
+                    mat.clearcoatRoughness = isDark ? 0.08 : 0.05;
                 }
                 break;
 
