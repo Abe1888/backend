@@ -190,42 +190,47 @@ class TranslinkCMS {
     private renderDashboard() {
         this.appEl.innerHTML = `
             <div class="cms-dashboard">
-                <!-- Sidebar Nav Group -->
+                <!-- ═══ SIDEBAR — Pure Navigation ═══ -->
                 <aside class="cms-sidebar" id="cmsSidebar">
+
+                    <!-- Brand -->
                     <div class="cms-brand">
                         <div class="cms-brand-logo">T</div>
-                        <div class="cms-brand-name">TRANSLINK</div>
-                        <span class="cms-brand-badge">CMS</span>
+                        <div>
+                            <div class="cms-brand-name">TRANSLINK</div>
+                            <div class="cms-brand-sub">CMS Studio</div>
+                        </div>
                     </div>
 
-                    <!-- Global Mode Switches Tab -->
-                    <div class="cms-sidebar-modes">
-                        <button class="cms-sidebar-mode-btn active" id="modeBtnLang">Copy Editor</button>
-                        <button class="cms-sidebar-mode-btn" id="modeBtn3d">3D Meshes</button>
-                        <button class="cms-sidebar-mode-btn" id="modeBtnCamera">Camera Path</button>
-                        <button class="cms-sidebar-mode-btn" id="modeBtnVoice">Live Voice</button>
-                    </div>
-
-                    <!-- Languages Toggle Panel (Only for Copy Editor) -->
+                    <!-- Active Languages (Copy Editor mode only) -->
                     <div class="cms-lang-toggles" id="sidebarLangToggles">
-                        <div class="cms-section-label">ACTIVE LANGUAGES</div>
+                        <div class="cms-section-label">Active Languages</div>
                         <div id="activeLangsList"></div>
                     </div>
 
-                    <!-- Sidebar Navigation Container -->
+                    <!-- Navigation -->
                     <nav class="cms-nav" id="cmsSidebarNav"></nav>
 
+                    <!-- Footer -->
                     <div class="cms-sidebar-footer">
                         <span class="cms-footer-text">Translink CMS v1.2.0</span>
                     </div>
                 </aside>
 
-                <!-- Main Section Workspace -->
+                <!-- ═══ MAIN CONTENT ═══ -->
                 <main class="cms-main-content">
+
+                    <!-- Top Header Bar: Logo area + Actions -->
                     <header class="cms-header">
-                        <div class="cms-header-title-wrapper">
-                            <button class="cms-menu-toggle" id="sidebarToggle" aria-label="Toggle Menu">☰</button>
-                            <div>
+                        <div class="cms-header-left">
+                            <button class="cms-menu-toggle" id="sidebarToggle" aria-label="Toggle Menu">
+                                <svg width="15" height="12" viewBox="0 0 15 12" fill="none">
+                                    <rect width="15" height="1.5" rx="0.75" fill="currentColor"/>
+                                    <rect y="5.25" width="11" height="1.5" rx="0.75" fill="currentColor"/>
+                                    <rect y="10.5" width="15" height="1.5" rx="0.75" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <div class="cms-header-title-block">
                                 <h1 class="cms-header-title" id="cmsHeaderTitle">Language Config Editor</h1>
                                 <p class="cms-header-subtitle" id="cmsHeaderSubtitle">Direct, visual editing of website localization copy</p>
                             </div>
@@ -233,22 +238,42 @@ class TranslinkCMS {
 
                         <div class="cms-header-actions">
                             <div class="cms-dirty-badge" id="cmsDirtyBadge" style="display: none;">
-                                <div class="cms-toast-icon"></div>
-                                <span id="dirtyCountText">0 pending changes</span>
+                                <div class="cms-dirty-dot"></div>
+                                <span id="dirtyCountText">0 changes</span>
                             </div>
-                            <button class="cms-btn cms-btn-secondary" id="cmsExportBtn">
-                                <span>Export JSON</span>
-                            </button>
-                            <button class="cms-btn cms-btn-secondary" id="cmsDiscardBtn" disabled>Discard</button>
+                            <button class="cms-btn cms-btn-ghost" id="cmsExportBtn">Export JSON</button>
+                            <button class="cms-btn cms-btn-outline" id="cmsDiscardBtn" disabled>Discard</button>
                             <button class="cms-btn cms-btn-primary" id="cmsSaveBtn" disabled>Save Changes</button>
                         </div>
                     </header>
 
-                    <!-- Language Tab Selectors (Only for Copy Editor) -->
-                    <div class="cms-lang-tabs">
-                        <div class="cms-lang-tab active" data-lang="en">ENGLISH</div>
-                        <div class="cms-lang-tab" data-lang="am">AMHARIC</div>
-                        <div class="cms-lang-tab" data-lang="ar">ARABIC</div>
+                    <!-- Mode Navigation Row (below header) -->
+                    <div class="cms-mode-nav" id="cmsModeNav">
+                        <button class="cms-mode-tab active" id="modeBtnLang" data-mode="lang">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            Copy Editor
+                        </button>
+                        <button class="cms-mode-tab" id="modeBtn3d" data-mode="3d">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                            </svg>
+                            3D Meshes
+                        </button>
+                        <button class="cms-mode-tab" id="modeBtnCamera" data-mode="camera">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M20.188 10.934l-1.688.507A7 7 0 0016.5 8l.507-1.688A2 2 0 0015.095 4.4l-1.503.901A7 7 0 0012 5a7 7 0 00-1.592.3L8.905 4.4A2 2 0 007 6.312L7.507 8A7 7 0 005.5 11.066L3.812 10.56A2 2 0 002 12.5v.014a2 2 0 001.811 1.992l1.7.255A7 7 0 007.5 16l-.507 1.688A2 2 0 008.905 19.6l1.503-.9A7 7 0 0012 19a7 7 0 001.592-.3l1.503.9a2 2 0 001.906-1.912L16.5 16a7 7 0 002-2.261l1.7-.255A2 2 0 0022 11.514V11.5a2 2 0 00-1.812-1.566z"/>
+                            </svg>
+                            Camera Path
+                        </button>
+                        <button class="cms-mode-tab" id="modeBtnVoice" data-mode="voice">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+                            </svg>
+                            Live Voice
+                        </button>
                     </div>
 
                     <!-- Inner Workspace body -->
@@ -259,9 +284,9 @@ class TranslinkCMS {
         `;
 
         // Cache Elements
-        this.saveBtn = document.getElementById('cmsSaveBtn') as HTMLButtonElement;
+        this.saveBtn    = document.getElementById('cmsSaveBtn') as HTMLButtonElement;
         this.discardBtn = document.getElementById('cmsDiscardBtn') as HTMLButtonElement;
-        this.exportBtn = document.getElementById('cmsExportBtn') as HTMLButtonElement;
+        this.exportBtn  = document.getElementById('cmsExportBtn') as HTMLButtonElement;
         this.dirtyBadge = document.getElementById('cmsDirtyBadge')!;
         this.mainContentEl = document.getElementById('cmsWorkspaceBody')!;
 
@@ -289,62 +314,50 @@ class TranslinkCMS {
             }
         });
 
-        // Mode Switching
-        const modeBtnLang = document.getElementById('modeBtnLang')!;
-        const modeBtn3d = document.getElementById('modeBtn3d')!;
+        // Mode Switching — buttons are in the header's cms-mode-nav row
+        const modeBtnLang   = document.getElementById('modeBtnLang')!;
+        const modeBtn3d     = document.getElementById('modeBtn3d')!;
         const modeBtnCamera = document.getElementById('modeBtnCamera')!;
-        const modeBtnVoice = document.getElementById('modeBtnVoice')!;
+        const modeBtnVoice  = document.getElementById('modeBtnVoice')!;
 
         const resetHeaderAndLangPanel = (mode: 'lang' | '3d' | 'camera' | 'voice') => {
             this.activeMode = mode;
-            const tabs = document.querySelector('.cms-lang-tabs') as HTMLElement;
             const langToggles = document.getElementById('sidebarLangToggles')!;
+            const langTabsSep = document.getElementById('langTabsSep');
+            const langTabsSm  = document.querySelectorAll('.cms-lang-tab-sm');
 
-            // Remove active classes
-            modeBtnLang.classList.remove('active');
-            modeBtn3d.classList.remove('active');
-            modeBtnCamera.classList.remove('active');
-            modeBtnVoice.classList.remove('active');
+            // Reset all mode tab active states
+            [modeBtnLang, modeBtn3d, modeBtnCamera, modeBtnVoice].forEach(b => b.classList.remove('active'));
+
+            // Show/hide language controls based on mode
+            const isLang = mode === 'lang';
+            langToggles.style.display = isLang ? 'block' : 'none';
+            if (langTabsSep) (langTabsSep as HTMLElement).style.display = isLang ? 'block' : 'none';
+            langTabsSm.forEach(t => (t as HTMLElement).style.display = isLang ? 'flex' : 'none');
 
             if (mode === 'lang') {
                 modeBtnLang.classList.add('active');
-                langToggles.style.display = 'block';
-                tabs.style.display = 'flex';
-                
                 this.activeNavGroup = 'global';
-                this.activeNavId = 'global';
-                
-                document.getElementById('cmsHeaderTitle')!.textContent = 'Language Config Editor';
+                this.activeNavId    = 'global';
+                document.getElementById('cmsHeaderTitle')!.textContent    = 'Language Config Editor';
                 document.getElementById('cmsHeaderSubtitle')!.textContent = 'Direct, visual editing of website localization copy';
             } else if (mode === '3d') {
                 modeBtn3d.classList.add('active');
-                langToggles.style.display = 'none';
-                tabs.style.display = 'none';
-                
                 this.activeNavGroup = 'behavior-defaults';
-                this.activeNavId = 'behavior-defaults';
-                
-                document.getElementById('cmsHeaderTitle')!.textContent = '3D Canvas Mesh Editor';
+                this.activeNavId    = 'behavior-defaults';
+                document.getElementById('cmsHeaderTitle')!.textContent    = '3D Canvas Mesh Editor';
                 document.getElementById('cmsHeaderSubtitle')!.textContent = 'Interactive editing of mesh default behaviors and material aesthetics';
             } else if (mode === 'camera') {
                 modeBtnCamera.classList.add('active');
-                langToggles.style.display = 'none';
-                tabs.style.display = 'none';
-                
                 this.activeNavGroup = 'camera-desktop';
-                this.activeNavId = 'camera-desktop';
-                
-                document.getElementById('cmsHeaderTitle')!.textContent = 'Camera Animation Path Editor';
+                this.activeNavId    = 'camera-desktop';
+                document.getElementById('cmsHeaderTitle')!.textContent    = 'Camera Animation Path Editor';
                 document.getElementById('cmsHeaderSubtitle')!.textContent = 'Tune scroll-driven PBR camera framing keyframes and lookAt focus coordinates';
             } else {
                 modeBtnVoice.classList.add('active');
-                langToggles.style.display = 'none';
-                tabs.style.display = 'none';
-                
                 this.activeNavGroup = 'voice-settings';
-                this.activeNavId = 'voice-settings';
-                
-                document.getElementById('cmsHeaderTitle')!.textContent = 'Gemini Live Voice & RAG Configs';
+                this.activeNavId    = 'voice-settings';
+                document.getElementById('cmsHeaderTitle')!.textContent    = 'Gemini Live Voice & RAG Configs';
                 document.getElementById('cmsHeaderSubtitle')!.textContent = 'Tune active voice speakers, sync domain frequencies, memory retention, and assistant knowledge RAG manual';
             }
 
@@ -353,26 +366,15 @@ class TranslinkCMS {
             this.updateChangesCount();
         };
 
-        modeBtnLang.addEventListener('click', () => resetHeaderAndLangPanel('lang'));
-        modeBtn3d.addEventListener('click', () => resetHeaderAndLangPanel('3d'));
+        modeBtnLang.addEventListener('click',   () => resetHeaderAndLangPanel('lang'));
+        modeBtn3d.addEventListener('click',     () => resetHeaderAndLangPanel('3d'));
         modeBtnCamera.addEventListener('click', () => resetHeaderAndLangPanel('camera'));
-        modeBtnVoice.addEventListener('click', () => resetHeaderAndLangPanel('voice'));
+        modeBtnVoice.addEventListener('click',  () => resetHeaderAndLangPanel('voice'));
 
-        // Save, Discard, and Download actions
-        this.saveBtn.addEventListener('click', () => this.saveChanges());
+        // Save, Discard, Export actions
+        this.saveBtn.addEventListener('click',    () => this.saveChanges());
         this.discardBtn.addEventListener('click', () => this.discardChanges());
-        this.exportBtn.addEventListener('click', () => this.exportConfig());
-
-        // Language translation tabs switches
-        const tabs = document.querySelectorAll('.cms-lang-tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                this.activeLangTab = tab.getAttribute('data-lang')!;
-                this.renderActiveWorkspace();
-            });
-        });
+        this.exportBtn.addEventListener('click',  () => this.exportConfig());
 
         // Sidebar navigation list routing
         this.appEl.addEventListener('click', (e) => {
@@ -474,123 +476,146 @@ class TranslinkCMS {
         navContainer.innerHTML = '';
 
         if (this.activeMode === 'lang') {
-            // Render Language Navigation
             navContainer.innerHTML = `
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">NAVIGATION</div>
+                    <div class="cms-section-label">Overview</div>
                     <div class="cms-nav-item ${this.activeNavId === 'global' ? 'active' : ''}" data-group="global" data-id="global">
-                        <span>Global Layout Copy</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Global Layout Copy</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-global">0</span>
                     </div>
                 </div>
 
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">SECTIONS (S1 - S10)</div>
+                    <div class="cms-section-label">Sections (S1 – S10)</div>
                     <div id="sidebarSectionsList"></div>
                 </div>
 
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">WAYPOINTS</div>
+                    <div class="cms-section-label">Waypoints</div>
                     <div id="sidebarWaypointsList"></div>
                 </div>
 
-                <div class="cms-nav-group" style="margin-top: 30px;">
-                    <div class="cms-section-label">ADVANCED</div>
+                <div class="cms-nav-group">
+                    <div class="cms-section-label">Advanced</div>
                     <div class="cms-nav-item ${this.activeNavId === 'raw' ? 'active' : ''}" data-group="raw" data-id="raw">
-                        <span>Raw JSON Code</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Raw JSON Editor</span>
+                        </div>
                     </div>
                 </div>
             `;
             this.renderSidebarItems();
         } else if (this.activeMode === '3d') {
-            // Render 3D Config Navigation
             navContainer.innerHTML = `
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">MESH BEHAVIORS</div>
+                    <div class="cms-section-label">Meshes & Materials</div>
                     <div class="cms-nav-item ${this.activeNavId === 'behavior-defaults' ? 'active' : ''}" data-group="behavior-defaults" data-id="behavior-defaults">
-                        <span>Global Defaults</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Global Defaults</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-3d-beh-def">0</span>
                     </div>
-                    <div class="cms-nav-item ${this.activeNavId === 'behavior-meshes' ? 'active' : ''}" data-group="behavior-meshes" data-id="behavior-meshes">
-                        <span>Meshes Overrides</span>
-                        <span class="cms-nav-item-count" id="count-3d-beh-mesh">0</span>
+                    <div class="cms-nav-item ${this.activeNavId === 'mesh-materials' ? 'active' : ''}" data-group="mesh-materials" data-id="mesh-materials">
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Overrides & Aesthetics</span>
+                        </div>
+                        <span class="cms-nav-item-count" id="count-3d-mesh-mat">0</span>
                     </div>
                 </div>
 
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">MESH MATERIALS</div>
-                    <div class="cms-nav-item ${this.activeNavId === 'material-aesthetics' ? 'active' : ''}" data-group="material-aesthetics" data-id="material-aesthetics">
-                        <span>Material Aesthetics</span>
-                        <span class="cms-nav-item-count" id="count-3d-mat">0</span>
-                    </div>
-                </div>
-
-                <div class="cms-nav-group" style="margin-top: 30px;">
-                    <div class="cms-section-label">ADVANCED</div>
+                    <div class="cms-section-label">Advanced</div>
                     <div class="cms-nav-item ${this.activeNavId === 'raw-behavior' ? 'active' : ''}" data-group="raw-behavior" data-id="raw-behavior">
-                        <span>Raw Behavior JSON</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Raw Behavior JSON</span>
+                        </div>
                     </div>
                     <div class="cms-nav-item ${this.activeNavId === 'raw-material' ? 'active' : ''}" data-group="raw-material" data-id="raw-material">
-                        <span>Raw Material JSON</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Raw Material JSON</span>
+                        </div>
                     </div>
                 </div>
             `;
         } else if (this.activeMode === 'camera') {
-            // Render Camera Navigation
             navContainer.innerHTML = `
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">CAMERA PATH TIMELINES</div>
+                    <div class="cms-section-label">Camera Timelines</div>
                     <div class="cms-nav-item ${this.activeNavId === 'camera-desktop' ? 'active' : ''}" data-group="camera-desktop" data-id="camera-desktop">
-                        <span>Desktop path (16:9+)</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Desktop</span>
+                            <span class="cms-nav-item-sub">16:9+ widescreen</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-cam-desk">0</span>
                     </div>
                     <div class="cms-nav-item ${this.activeNavId === 'camera-tablet' ? 'active' : ''}" data-group="camera-tablet" data-id="camera-tablet">
-                        <span>Tablet path (4:3)</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Tablet</span>
+                            <span class="cms-nav-item-sub">4:3 landscape</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-cam-tab">0</span>
                     </div>
                     <div class="cms-nav-item ${this.activeNavId === 'camera-mobile' ? 'active' : ''}" data-group="camera-mobile" data-id="camera-mobile">
-                        <span>Mobile path (Portrait)</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Mobile</span>
+                            <span class="cms-nav-item-sub">Portrait</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-cam-mob">0</span>
                     </div>
                 </div>
 
-                <div class="cms-nav-group" style="margin-top: 30px;">
-                    <div class="cms-section-label">ADVANCED</div>
+                <div class="cms-nav-group">
+                    <div class="cms-section-label">Advanced</div>
                     <div class="cms-nav-item ${this.activeNavId === 'raw-camera' ? 'active' : ''}" data-group="raw-camera" data-id="raw-camera">
-                        <span>Raw Camera JSON</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Raw Camera JSON</span>
+                        </div>
                     </div>
                 </div>
             `;
         } else {
-            // Render Voice Config Navigation
             navContainer.innerHTML = `
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">ASSISTANT CHANNELS</div>
+                    <div class="cms-section-label">Voice & Speech</div>
                     <div class="cms-nav-item ${this.activeNavId === 'voice-settings' ? 'active' : ''}" data-group="voice-settings" data-id="voice-settings">
-                        <span>Voice Settings</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Voice Settings</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-voice-sett">0</span>
                     </div>
                 </div>
 
                 <div class="cms-nav-group">
-                    <div class="cms-section-label">RAG SYSTEM CONFIG</div>
+                    <div class="cms-section-label">RAG Knowledge</div>
                     <div class="cms-nav-item ${this.activeNavId === 'knowledge-config' ? 'active' : ''}" data-group="knowledge-config" data-id="knowledge-config">
-                        <span>RAG Knowledge Config</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Knowledge Config</span>
+                            <span class="cms-nav-item-sub">Crawl, vector, memory</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-voice-kn-conf">0</span>
                     </div>
                     <div class="cms-nav-item ${this.activeNavId === 'knowledge-md' ? 'active' : ''}" data-group="knowledge-md" data-id="knowledge-md">
-                        <span>AI Knowledge Manual (MD)</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">AI Knowledge Manual</span>
+                            <span class="cms-nav-item-sub">Markdown RAG source</span>
+                        </div>
                         <span class="cms-nav-item-count" id="count-voice-kn-md">0</span>
                     </div>
                 </div>
 
-                <div class="cms-nav-group" style="margin-top: 30px;">
-                    <div class="cms-section-label">ADVANCED</div>
+                <div class="cms-nav-group">
+                    <div class="cms-section-label">Advanced</div>
                     <div class="cms-nav-item ${this.activeNavId === 'raw-voice' ? 'active' : ''}" data-group="raw-voice" data-id="raw-voice">
-                        <span>Raw Voice JSON</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Raw Voice JSON</span>
+                        </div>
                     </div>
                     <div class="cms-nav-item ${this.activeNavId === 'raw-knowledge' ? 'active' : ''}" data-group="raw-knowledge" data-id="raw-knowledge">
-                        <span>Raw Knowledge JSON</span>
+                        <div class="cms-nav-item-inner">
+                            <span class="cms-nav-item-title">Raw Knowledge JSON</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -598,15 +623,14 @@ class TranslinkCMS {
     }
 
     private renderSidebarItems() {
-        const sectionsContainer = document.getElementById('sidebarSectionsList')!;
+        const sectionsContainer  = document.getElementById('sidebarSectionsList')!;
         const waypointsContainer = document.getElementById('sidebarWaypointsList')!;
-        
-        // Sections S1 - S10
+
+        // Sections S1 – S10
         sectionsContainer.innerHTML = Object.entries(this.sectionLabels).map(([id, label]) => `
             <div class="cms-nav-item ${this.activeNavId === id ? 'active' : ''}" data-group="sections" data-id="${id}">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 700; text-transform: uppercase;">${id}</span>
-                    <span style="font-size: 10px; color: var(--text-secondary); font-family: var(--font-body);">${label}</span>
+                <div class="cms-nav-item-inner">
+                    <span class="cms-nav-item-title">${label}</span>
                 </div>
                 <span class="cms-nav-item-count" id="count-sec-${id}">0</span>
             </div>
@@ -615,9 +639,8 @@ class TranslinkCMS {
         // Waypoints
         waypointsContainer.innerHTML = Object.entries(this.waypointLabels).map(([id, label]) => `
             <div class="cms-nav-item ${this.activeNavId === id ? 'active' : ''}" data-group="waypoints" data-id="${id}">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 600;">${label}</span>
-                    <span style="font-size: 9px; color: var(--text-muted); font-family: monospace;">${id}</span>
+                <div class="cms-nav-item-inner">
+                    <span class="cms-nav-item-title">${label}</span>
                 </div>
                 <span class="cms-nav-item-count" id="count-way-${id}">0</span>
             </div>
@@ -652,8 +675,82 @@ class TranslinkCMS {
         });
     }
 
+    private updateHeader() {
+        let title = '';
+        let subtitle = '';
+
+        if (this.activeMode === 'lang') {
+            if (this.activeNavGroup === 'global') {
+                title = 'Global Copy Settings';
+                subtitle = 'Edit global variables like branding, common action text, loader synchronization, and structural telematics labels.';
+            } else if (this.activeNavGroup === 'sections') {
+                const sectionId = this.activeNavId;
+                title = `Section ${sectionId.substring(1).padStart(2, '0')} Copy: ${this.sectionLabels[sectionId] || ''}`;
+                subtitle = `Edit copy text blocks and badge labels displayed inside the ${this.sectionLabels[sectionId] || ''} section.`;
+            } else if (this.activeNavGroup === 'waypoints') {
+                const waypointId = this.activeNavId;
+                title = `Waypoint: ${this.waypointLabels[waypointId] || ''}`;
+                subtitle = `Edit subtitles, descriptions, and feature bullet values displayed inside the 3D canvas popups.`;
+            } else if (this.activeNavGroup === 'raw') {
+                title = 'Raw Translation Copy JSON';
+                subtitle = 'Directly inspect and modify the raw translation dictionary JSON.';
+            }
+        } else if (this.activeMode === '3d') {
+            if (this.activeNavGroup === 'behavior-defaults') {
+                title = 'Mesh Behavior Defaults';
+                subtitle = 'Edit default global rendering conditions applied to meshes inside the 3D canvas.';
+            } else if (this.activeNavGroup === 'mesh-materials') {
+                title = 'Mesh Overrides & Material Aesthetics';
+                subtitle = 'Edit individual mesh visibility, animation overrides, PBR colors, metalness, roughness, and reflection parameters side by side.';
+            } else if (this.activeNavGroup === 'raw-behavior') {
+                title = 'Raw Behavior JSON';
+                subtitle = 'Direct overrides code configurations for shadows and visibilities.';
+            } else if (this.activeNavGroup === 'raw-material') {
+                title = 'Raw Material JSON';
+                subtitle = 'Metallic, roughness, envMap reflection parameters and self-glow hex colors configurations.';
+            }
+        } else if (this.activeMode === 'camera') {
+            if (this.activeNavGroup === 'camera-desktop') {
+                title = 'Desktop Camera Path Timeline';
+                subtitle = 'Tune scroll-driven PBR camera framing keyframes and lookAt focus coordinates.';
+            } else if (this.activeNavGroup === 'camera-tablet') {
+                title = 'Tablet Camera Path Timeline';
+                subtitle = 'Tune camera framing keyframes and lookAt focus coordinates for tablet layout.';
+            } else if (this.activeNavGroup === 'camera-mobile') {
+                title = 'Mobile Camera Path Timeline';
+                subtitle = 'Tune camera framing keyframes and lookAt focus coordinates for mobile layout.';
+            } else if (this.activeNavGroup === 'raw-camera') {
+                title = 'Raw Camera JSON';
+                subtitle = 'Inspect and modify the raw camera scroll keyframes array.';
+            }
+        } else {
+            if (this.activeNavGroup === 'voice-settings') {
+                title = 'Gemini Assistant Voice Settings';
+                subtitle = 'Adjust the active speaking voice character for English, Amharic, and Arabic languages.';
+            } else if (this.activeNavGroup === 'knowledge-config') {
+                title = 'RAG Knowledge Base & Crawler Config';
+                subtitle = 'Manage ingestion policies, crawler depth, chunk sizes, vector parameters, and memory tiers.';
+            } else if (this.activeNavGroup === 'knowledge-md') {
+                title = 'AI Assistant Knowledge Manual (MD)';
+                subtitle = 'Edit the core semantic markdown text manual loaded by the Gemini Live Voice assistant engine.';
+            } else if (this.activeNavGroup === 'raw-voice') {
+                title = 'Raw Voice JSON';
+                subtitle = 'Direct speaker active selection and metadata details.';
+            } else if (this.activeNavGroup === 'raw-knowledge') {
+                title = 'Raw Knowledge JSON';
+                subtitle = 'Crawl intervals, vector rules, tags, and memory settings.';
+            }
+        }
+
+        const titleEl = document.getElementById('cmsHeaderTitle');
+        const subtitleEl = document.getElementById('cmsHeaderSubtitle');
+        if (titleEl) titleEl.textContent = title;
+        if (subtitleEl) subtitleEl.textContent = subtitle;
+    }
+
     /* --- Workspace Render Routing --- */
     private renderActiveWorkspace() {
+        this.updateHeader();
         this.mainContentEl.innerHTML = '';
         
         // Advanced raw editors router
@@ -663,34 +760,19 @@ class TranslinkCMS {
         }
 
         if (this.activeMode === 'lang') {
-            // Render Language translation layouts
-            const langData = this.currentConfig[this.activeLangTab];
-            if (!langData) {
-                this.mainContentEl.innerHTML = `
-                    <div class="cms-view-container" style="text-align: center; padding-top: 60px;">
-                        <div style="font-size: 36px;">⚠</div>
-                        <h3 style="font-family: var(--font-heading); margin-top: 16px;">Language Data Missing</h3>
-                        <p style="color: var(--text-secondary); margin-top: 8px;">No localization records exist for "${this.activeLangTab.toUpperCase()}"</p>
-                    </div>
-                `;
-                return;
-            }
-
             if (this.activeNavGroup === 'global') {
-                this.renderGlobalWorkspace(langData.global);
+                this.renderGlobalWorkspace();
             } else if (this.activeNavGroup === 'sections') {
-                this.renderSectionsWorkspace(langData.sections[this.activeNavId]);
+                this.renderSectionsWorkspace();
             } else if (this.activeNavGroup === 'waypoints') {
-                this.renderWaypointsWorkspace(langData.waypoints[this.activeNavId]);
+                this.renderWaypointsWorkspace();
             }
         } else if (this.activeMode === '3d') {
             // Render 3D Canvas properties layouts
             if (this.activeNavGroup === 'behavior-defaults') {
                 this.render3DBehaviorDefaultsWorkspace();
-            } else if (this.activeNavGroup === 'behavior-meshes') {
-                this.render3DBehaviorMeshesWorkspace();
-            } else if (this.activeNavGroup === 'material-aesthetics') {
-                this.render3DMaterialsWorkspace();
+            } else if (this.activeNavGroup === 'mesh-materials') {
+                this.render3DMeshMaterialsWorkspace();
             }
         } else if (this.activeMode === 'camera') {
             // Render Camera Path configuration timelines
@@ -708,243 +790,399 @@ class TranslinkCMS {
     }
 
     /* --- 1. Language Layout Renderers --- */
-    private renderGlobalWorkspace(globalData: Record<string, string>) {
-        const title = "Global Copy Settings";
-        const desc = "Edit global variables like branding, common action text, loader synchronization, and structural telematics labels.";
-        
-        let fieldsHtml = '';
-        Object.keys(globalData).forEach(key => {
-            const val = globalData[key];
-            const isDirty = val !== this.originalConfig[this.activeLangTab]?.global?.[key];
-            
-            fieldsHtml += `
-                <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                    <div class="cms-field-label-row">
-                        <div class="cms-field-label-wrapper">
-                            <label class="cms-field-label" for="field-global-${key}">${key.replace(/_/g, ' ')}</label>
-                            <span class="cms-field-key">global.${key}</span>
-                        </div>
+    private renderGlobalWorkspace() {
+        const enGlobal = this.currentConfig.en.global;
+        const amGlobal = this.currentConfig.am.global;
+        const arGlobal = this.currentConfig.ar.global;
+
+        let rowsHtml = '';
+        Object.keys(enGlobal).forEach(key => {
+            const enVal = enGlobal[key] || '';
+            const amVal = amGlobal[key] || '';
+            const arVal = arGlobal[key] || '';
+
+            const isDirtyEn = enVal !== this.originalConfig.en?.global?.[key];
+            const isDirtyAm = amVal !== this.originalConfig.am?.global?.[key];
+            const isDirtyAr = arVal !== this.originalConfig.ar?.global?.[key];
+            const isDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+            rowsHtml += `
+                <div class="cms-multilang-row ${isDirty ? 'dirty' : ''}">
+                    <div class="cms-multilang-label-col">
+                        <label class="cms-multilang-label" for="field-global-${key}-en">${key.replace(/_/g, ' ')}</label>
+                        <span class="cms-multilang-key">global.${key}</span>
                         ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
                     </div>
-                    <input type="text" class="cms-input cms-input-${this.activeLangTab}" id="field-global-${key}" value="${this.escapeHtml(val)}">
+                    <div>
+                        <input type="text" class="cms-input cms-input-en" id="field-global-${key}-en" value="${this.escapeHtml(enVal)}">
+                    </div>
+                    <div>
+                        <input type="text" class="cms-input cms-input-am" id="field-global-${key}-am" value="${this.escapeHtml(amVal)}">
+                    </div>
+                    <div>
+                        <input type="text" class="cms-input cms-input-ar" id="field-global-${key}-ar" value="${this.escapeHtml(arVal)}">
+                    </div>
                 </div>
             `;
         });
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
+                <div class="cms-fields-grid">
+                    <div class="cms-multilang-header">
+                        <span>Label / Path</span>
+                        <span>English (EN)</span>
+                        <span>Amharic (AM)</span>
+                        <span>Arabic (AR)</span>
                     </div>
+                    ${rowsHtml}
                 </div>
-                <div class="cms-fields-grid">${fieldsHtml}</div>
             </div>
         `;
 
-        // Action inputs listeners
-        Object.keys(globalData).forEach(key => {
-            const input = document.getElementById(`field-global-${key}`) as HTMLInputElement;
-            input.addEventListener('input', () => {
-                this.currentConfig[this.activeLangTab].global[key] = input.value;
-                this.updateChangesCount();
-                
-                const card = input.closest('.cms-field-card')!;
-                const isChanged = input.value !== this.originalConfig[this.activeLangTab]?.global?.[key];
-                card.classList.toggle('dirty', isChanged);
-                
-                let badge = card.querySelector('.cms-field-dirty-marker');
-                if (isChanged && !badge) {
-                    card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                } else if (!isChanged && badge) {
-                    badge.remove();
-                }
+        // Bind input listeners for all three languages
+        Object.keys(enGlobal).forEach(key => {
+            ['en', 'am', 'ar'].forEach(lang => {
+                const el = document.getElementById(`field-global-${key}-${lang}`) as HTMLInputElement;
+                if (!el) return;
+                el.addEventListener('input', () => {
+                    this.currentConfig[lang].global[key] = el.value;
+                    this.updateChangesCount();
+
+                    const row = el.closest('.cms-multilang-row')!;
+                    const isDirtyEn = this.currentConfig.en.global[key] !== this.originalConfig.en?.global?.[key];
+                    const isDirtyAm = this.currentConfig.am.global[key] !== this.originalConfig.am?.global?.[key];
+                    const isDirtyAr = this.currentConfig.ar.global[key] !== this.originalConfig.ar?.global?.[key];
+                    const rowDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+                    row.classList.toggle('dirty', rowDirty);
+
+                    let badge = row.querySelector('.cms-field-dirty-marker');
+                    if (rowDirty && !badge) {
+                        row.querySelector('.cms-multilang-label-col')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+                    } else if (!rowDirty && badge) {
+                        badge.remove();
+                    }
+                });
             });
         });
     }
 
-    private renderSectionsWorkspace(sectionData: any) {
-        if (!sectionData) return;
+    private renderSectionsWorkspace() {
         const sectionId = this.activeNavId;
-        const title = `Section ${sectionId.substring(1).padStart(2, '0')} Copy`;
-        const desc = `Edit copy text blocks and badge labels displayed inside the ${this.sectionLabels[sectionId]} section viewport.`;
+        const enSection = this.currentConfig.en.sections[sectionId];
+        const amSection = this.currentConfig.am.sections[sectionId];
+        const arSection = this.currentConfig.ar.sections[sectionId];
 
-        let fieldsHtml = '';
-        const fields = Object.keys(sectionData).filter(k => k !== 'id');
+        if (!enSection) return;
+
+        let rowsHtml = '';
+        const fields = Object.keys(enSection).filter(k => k !== 'id');
 
         fields.forEach(key => {
-            const val = sectionData[key];
-            const originalVal = this.originalConfig[this.activeLangTab]?.sections?.[sectionId]?.[key];
-            const isDirty = JSON.stringify(val) !== JSON.stringify(originalVal);
+            const enVal = enSection[key];
+            const amVal = amSection?.[key] || '';
+            const arVal = arSection?.[key] || '';
 
-            if (Array.isArray(val)) {
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}" id="card-sec-${key}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label">${key.replace(/_/g, ' ')}</label>
-                                <span class="cms-field-key">sections.${sectionId}.${key}</span>
+            const isDirtyEn = JSON.stringify(enVal) !== JSON.stringify(this.originalConfig.en?.sections?.[sectionId]?.[key]);
+            const isDirtyAm = JSON.stringify(amVal) !== JSON.stringify(this.originalConfig.am?.sections?.[sectionId]?.[key]);
+            const isDirtyAr = JSON.stringify(arVal) !== JSON.stringify(this.originalConfig.ar?.sections?.[sectionId]?.[key]);
+            const isDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+            if (Array.isArray(enVal)) {
+                rowsHtml += `
+                    <div class="cms-multilang-row cms-multilang-vertical ${isDirty ? 'dirty' : ''}" id="card-sec-${key}">
+                        <div class="cms-multilang-label-col">
+                            <div>
+                                <span class="cms-multilang-label">${key.replace(/_/g, ' ')}</span>
+                                <span class="cms-multilang-key">sections.${sectionId}.${key}</span>
                             </div>
                             ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
                         </div>
-                        <div class="cms-tag-editor" id="tag-editor-sec-${key}">
-                            <div class="cms-tags-list" id="tags-list-sec-${key}"></div>
-                            <input type="text" class="cms-tag-input" id="tag-input-sec-${key}" placeholder="+ Add tag pill...">
+                        <div class="cms-multilang-inputs-grid">
+                            <div class="cms-tag-editor" id="tag-editor-sec-${key}-en">
+                                <div class="cms-tags-list" id="tags-list-sec-${key}-en"></div>
+                                <input type="text" class="cms-tag-input" id="tag-input-sec-${key}-en" placeholder="+ Add EN tag...">
+                            </div>
+                            <div class="cms-tag-editor" id="tag-editor-sec-${key}-am">
+                                <div class="cms-tags-list" id="tags-list-sec-${key}-am"></div>
+                                <input type="text" class="cms-tag-input" id="tag-input-sec-${key}-am" placeholder="+ Add AM tag...">
+                            </div>
+                            <div class="cms-tag-editor" id="tag-editor-sec-${key}-ar">
+                                <div class="cms-tags-list" id="tags-list-sec-${key}-ar"></div>
+                                <input type="text" class="cms-tag-input" id="tag-input-sec-${key}-ar" placeholder="+ Add AR tag...">
+                            </div>
                         </div>
                     </div>
                 `;
             } else {
-                const isLongText = key.includes('desc') || key.includes('description') || val.length > 50;
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label" for="field-sec-${key}">${key.replace(/_/g, ' ')}</label>
-                                <span class="cms-field-key">sections.${sectionId}.${key}</span>
+                const isLongText = key.includes('desc') || key.includes('description') || enVal.length > 50;
+
+                if (isLongText) {
+                    rowsHtml += `
+                        <div class="cms-multilang-row cms-multilang-vertical ${isDirty ? 'dirty' : ''}">
+                            <div class="cms-multilang-label-col">
+                                <div>
+                                    <span class="cms-multilang-label" for="field-sec-${key}-en">${key.replace(/_/g, ' ')}</span>
+                                    <span class="cms-multilang-key">sections.${sectionId}.${key}</span>
+                                </div>
+                                ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
                             </div>
-                            ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
+                            <div class="cms-multilang-inputs-grid">
+                                <textarea class="cms-textarea cms-textarea-en" id="field-sec-${key}-en">${this.escapeHtml(enVal)}</textarea>
+                                <textarea class="cms-textarea cms-textarea-am" id="field-sec-${key}-am">${this.escapeHtml(amVal)}</textarea>
+                                <textarea class="cms-textarea cms-textarea-ar" id="field-sec-${key}-ar">${this.escapeHtml(arVal)}</textarea>
+                            </div>
                         </div>
-                        ${isLongText 
-                            ? `<textarea class="cms-textarea cms-textarea-${this.activeLangTab} cms-textarea" id="field-sec-${key}">${this.escapeHtml(val)}</textarea>`
-                            : `<input type="text" class="cms-input cms-input-${this.activeLangTab} cms-input" id="field-sec-${key}" value="${this.escapeHtml(val)}">`
-                        }
-                    </div>
-                `;
+                    `;
+                } else {
+                    rowsHtml += `
+                        <div class="cms-multilang-row ${isDirty ? 'dirty' : ''}">
+                            <div class="cms-multilang-label-col">
+                                <label class="cms-multilang-label" for="field-sec-${key}-en">${key.replace(/_/g, ' ')}</label>
+                                <span class="cms-multilang-key">sections.${sectionId}.${key}</span>
+                                ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
+                            </div>
+                            <div>
+                                <input type="text" class="cms-input cms-input-en" id="field-sec-${key}-en" value="${this.escapeHtml(enVal)}">
+                            </div>
+                            <div>
+                                <input type="text" class="cms-input cms-input-am" id="field-sec-${key}-am" value="${this.escapeHtml(amVal)}">
+                            </div>
+                            <div>
+                                <input type="text" class="cms-input cms-input-ar" id="field-sec-${key}-ar" value="${this.escapeHtml(arVal)}">
+                            </div>
+                        </div>
+                    `;
+                }
             }
         });
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
+                <div class="cms-fields-grid">
+                    <div class="cms-multilang-header">
+                        <span>Label / Path</span>
+                        <span>English (EN)</span>
+                        <span>Amharic (AM)</span>
+                        <span>Arabic (AR)</span>
                     </div>
+                    ${rowsHtml}
                 </div>
-                <div class="cms-fields-grid">${fieldsHtml}</div>
             </div>
         `;
 
-        // Bind handlers
+        // Bind interactive event listeners for all sections inputs/tag-editors
         fields.forEach(key => {
-            const val = sectionData[key];
-            const originalVal = this.originalConfig[this.activeLangTab]?.sections?.[sectionId]?.[key];
+            const enVal = enSection[key];
 
-            if (Array.isArray(val)) {
-                this.setupTagEditor(`sec-${key}`, val, originalVal, (newTags) => {
-                    this.currentConfig[this.activeLangTab].sections[sectionId][key] = newTags;
-                    this.updateChangesCount();
+            if (Array.isArray(enVal)) {
+                ['en', 'am', 'ar'].forEach(lang => {
+                    const val = this.currentConfig[lang].sections[sectionId][key];
+                    const origVal = this.originalConfig[lang]?.sections?.[sectionId]?.[key];
+                    this.setupTagEditor(`sec-${key}-${lang}`, val, origVal, (newTags) => {
+                        this.currentConfig[lang].sections[sectionId][key] = newTags;
+                        this.updateChangesCount();
+
+                        const card = document.getElementById(`card-sec-${key}`)!;
+                        const isDirtyEn = JSON.stringify(this.currentConfig.en.sections[sectionId][key]) !== JSON.stringify(this.originalConfig.en?.sections?.[sectionId]?.[key]);
+                        const isDirtyAm = JSON.stringify(this.currentConfig.am.sections[sectionId][key]) !== JSON.stringify(this.originalConfig.am?.sections?.[sectionId]?.[key]);
+                        const isDirtyAr = JSON.stringify(this.currentConfig.ar.sections[sectionId][key]) !== JSON.stringify(this.originalConfig.ar?.sections?.[sectionId]?.[key]);
+                        const rowDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+                        card.classList.toggle('dirty', rowDirty);
+
+                        let badge = card.querySelector('.cms-field-dirty-marker');
+                        if (rowDirty && !badge) {
+                            card.querySelector('.cms-multilang-label-col')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+                        } else if (!rowDirty && badge) {
+                            badge.remove();
+                        }
+                    });
                 });
             } else {
-                const el = document.getElementById(`field-sec-${key}`) as HTMLInputElement | HTMLTextAreaElement;
-                el.addEventListener('input', () => {
-                    this.currentConfig[this.activeLangTab].sections[sectionId][key] = el.value;
-                    this.updateChangesCount();
-                    
-                    const card = el.closest('.cms-field-card')!;
-                    const isChanged = el.value !== originalVal;
-                    card.classList.toggle('dirty', isChanged);
-                    
-                    let badge = card.querySelector('.cms-field-dirty-marker');
-                    if (isChanged && !badge) {
-                        card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                    } else if (!isChanged && badge) {
-                        badge.remove();
-                    }
+                ['en', 'am', 'ar'].forEach(lang => {
+                    const el = document.getElementById(`field-sec-${key}-${lang}`) as HTMLInputElement | HTMLTextAreaElement;
+                    if (!el) return;
+                    el.addEventListener('input', () => {
+                        this.currentConfig[lang].sections[sectionId][key] = el.value;
+                        this.updateChangesCount();
+
+                        const row = el.closest('.cms-multilang-row')!;
+                        const isDirtyEn = this.currentConfig.en.sections[sectionId][key] !== this.originalConfig.en?.sections?.[sectionId]?.[key];
+                        const isDirtyAm = this.currentConfig.am.sections[sectionId][key] !== this.originalConfig.am?.sections?.[sectionId]?.[key];
+                        const isDirtyAr = this.currentConfig.ar.sections[sectionId][key] !== this.originalConfig.ar?.sections?.[sectionId]?.[key];
+                        const rowDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+                        row.classList.toggle('dirty', rowDirty);
+
+                        let badge = row.querySelector('.cms-field-dirty-marker');
+                        if (rowDirty && !badge) {
+                            row.querySelector('.cms-multilang-label-col')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+                        } else if (!rowDirty && badge) {
+                            badge.remove();
+                        }
+                    });
                 });
             }
         });
     }
 
-    private renderWaypointsWorkspace(waypointData: any) {
-        if (!waypointData) return;
+    private renderWaypointsWorkspace() {
         const waypointId = this.activeNavId;
-        const title = `Waypoint Copy: ${this.waypointLabels[waypointId]}`;
-        const desc = `Edit subtitles, descriptions, and feature bullet values displayed inside the 3D canvas popups for the ${this.waypointLabels[waypointId]} node.`;
+        const enWaypoint = this.currentConfig.en.waypoints[waypointId];
+        const amWaypoint = this.currentConfig.am.waypoints[waypointId];
+        const arWaypoint = this.currentConfig.ar.waypoints[waypointId];
 
-        let fieldsHtml = '';
-        const fields = Object.keys(waypointData);
+        if (!enWaypoint) return;
+
+        let rowsHtml = '';
+        const fields = Object.keys(enWaypoint);
 
         fields.forEach(key => {
-            const val = waypointData[key];
-            const originalVal = this.originalConfig[this.activeLangTab]?.waypoints?.[waypointId]?.[key];
-            const isDirty = JSON.stringify(val) !== JSON.stringify(originalVal);
+            const enVal = enWaypoint[key];
+            const amVal = amWaypoint?.[key] || '';
+            const arVal = arWaypoint?.[key] || '';
 
-            if (Array.isArray(val)) {
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}" id="card-way-${key}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label">${key.replace(/_/g, ' ')}</label>
-                                <span class="cms-field-key">waypoints.${waypointId}.${key}</span>
+            const isDirtyEn = JSON.stringify(enVal) !== JSON.stringify(this.originalConfig.en?.waypoints?.[waypointId]?.[key]);
+            const isDirtyAm = JSON.stringify(amVal) !== JSON.stringify(this.originalConfig.am?.waypoints?.[waypointId]?.[key]);
+            const isDirtyAr = JSON.stringify(arVal) !== JSON.stringify(this.originalConfig.ar?.waypoints?.[waypointId]?.[key]);
+            const isDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+            if (Array.isArray(enVal)) {
+                rowsHtml += `
+                    <div class="cms-multilang-row cms-multilang-vertical ${isDirty ? 'dirty' : ''}" id="card-way-${key}">
+                        <div class="cms-multilang-label-col">
+                            <div>
+                                <span class="cms-multilang-label">${key.replace(/_/g, ' ')}</span>
+                                <span class="cms-multilang-key">waypoints.${waypointId}.${key}</span>
                             </div>
                             ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
                         </div>
-                        <div class="cms-tag-editor" id="tag-editor-way-${key}">
-                            <div class="cms-tags-list" id="tags-list-way-${key}"></div>
-                            <input type="text" class="cms-tag-input" id="tag-input-way-${key}" placeholder="+ Add tag...">
+                        <div class="cms-multilang-inputs-grid">
+                            <div class="cms-tag-editor" id="tag-editor-way-${key}-en">
+                                <div class="cms-tags-list" id="tags-list-way-${key}-en"></div>
+                                <input type="text" class="cms-tag-input" id="tag-input-way-${key}-en" placeholder="+ Add EN tag...">
+                            </div>
+                            <div class="cms-tag-editor" id="tag-editor-way-${key}-am">
+                                <div class="cms-tags-list" id="tags-list-way-${key}-am"></div>
+                                <input type="text" class="cms-tag-input" id="tag-input-way-${key}-am" placeholder="+ Add AM tag...">
+                            </div>
+                            <div class="cms-tag-editor" id="tag-editor-way-${key}-ar">
+                                <div class="cms-tags-list" id="tags-list-way-${key}-ar"></div>
+                                <input type="text" class="cms-tag-input" id="tag-input-way-${key}-ar" placeholder="+ Add AR tag...">
+                            </div>
                         </div>
                     </div>
                 `;
             } else {
-                const isLongText = key === 'description' || val.length > 50;
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label" for="field-way-${key}">${key.replace(/_/g, ' ')}</label>
-                                <span class="cms-field-key">waypoints.${waypointId}.${key}</span>
+                const isLongText = key === 'description' || enVal.length > 50;
+
+                if (isLongText) {
+                    rowsHtml += `
+                        <div class="cms-multilang-row cms-multilang-vertical ${isDirty ? 'dirty' : ''}">
+                            <div class="cms-multilang-label-col">
+                                <div>
+                                    <span class="cms-multilang-label" for="field-way-${key}-en">${key.replace(/_/g, ' ')}</span>
+                                    <span class="cms-multilang-key">waypoints.${waypointId}.${key}</span>
+                                </div>
+                                ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
                             </div>
-                            ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
+                            <div class="cms-multilang-inputs-grid">
+                                <textarea class="cms-textarea cms-textarea-en" id="field-way-${key}-en">${this.escapeHtml(enVal)}</textarea>
+                                <textarea class="cms-textarea cms-textarea-am" id="field-way-${key}-am">${this.escapeHtml(amVal)}</textarea>
+                                <textarea class="cms-textarea cms-textarea-ar" id="field-way-${key}-ar">${this.escapeHtml(arVal)}</textarea>
+                            </div>
                         </div>
-                        ${isLongText 
-                            ? `<textarea class="cms-textarea cms-textarea-${this.activeLangTab} cms-textarea" id="field-way-${key}">${this.escapeHtml(val)}</textarea>`
-                            : `<input type="text" class="cms-input cms-input-${this.activeLangTab} cms-input" id="field-way-${key}" value="${this.escapeHtml(val)}">`
-                        }
-                    </div>
-                `;
+                    `;
+                } else {
+                    rowsHtml += `
+                        <div class="cms-multilang-row ${isDirty ? 'dirty' : ''}">
+                            <div class="cms-multilang-label-col">
+                                <label class="cms-multilang-label" for="field-way-${key}-en">${key.replace(/_/g, ' ')}</label>
+                                <span class="cms-multilang-key">waypoints.${waypointId}.${key}</span>
+                                ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
+                            </div>
+                            <div>
+                                <input type="text" class="cms-input cms-input-en" id="field-way-${key}-en" value="${this.escapeHtml(enVal)}">
+                            </div>
+                            <div>
+                                <input type="text" class="cms-input cms-input-am" id="field-way-${key}-am" value="${this.escapeHtml(amVal)}">
+                            </div>
+                            <div>
+                                <input type="text" class="cms-input cms-input-ar" id="field-way-${key}-ar" value="${this.escapeHtml(arVal)}">
+                            </div>
+                        </div>
+                    `;
+                }
             }
         });
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
+                <div class="cms-fields-grid">
+                    <div class="cms-multilang-header">
+                        <span>Label / Path</span>
+                        <span>English (EN)</span>
+                        <span>Amharic (AM)</span>
+                        <span>Arabic (AR)</span>
                     </div>
+                    ${rowsHtml}
                 </div>
-                <div class="cms-fields-grid">${fieldsHtml}</div>
             </div>
         `;
 
-        // Bind handlers
+        // Bind interactive event listeners for all waypoint inputs/tag-editors
         fields.forEach(key => {
-            const val = waypointData[key];
-            const originalVal = this.originalConfig[this.activeLangTab]?.waypoints?.[waypointId]?.[key];
+            const enVal = enWaypoint[key];
 
-            if (Array.isArray(val)) {
-                this.setupTagEditor(`way-${key}`, val, originalVal, (newTags) => {
-                    this.currentConfig[this.activeLangTab].waypoints[waypointId][key] = newTags;
-                    this.updateChangesCount();
+            if (Array.isArray(enVal)) {
+                ['en', 'am', 'ar'].forEach(lang => {
+                    const val = this.currentConfig[lang].waypoints[waypointId][key];
+                    const origVal = this.originalConfig[lang]?.waypoints?.[waypointId]?.[key];
+                    this.setupTagEditor(`way-${key}-${lang}`, val, origVal, (newTags) => {
+                        this.currentConfig[lang].waypoints[waypointId][key] = newTags;
+                        this.updateChangesCount();
+
+                        const card = document.getElementById(`card-way-${key}`)!;
+                        const isDirtyEn = JSON.stringify(this.currentConfig.en.waypoints[waypointId][key]) !== JSON.stringify(this.originalConfig.en?.waypoints?.[waypointId]?.[key]);
+                        const isDirtyAm = JSON.stringify(this.currentConfig.am.waypoints[waypointId][key]) !== JSON.stringify(this.originalConfig.am?.waypoints?.[waypointId]?.[key]);
+                        const isDirtyAr = JSON.stringify(this.currentConfig.ar.waypoints[waypointId][key]) !== JSON.stringify(this.originalConfig.ar?.waypoints?.[waypointId]?.[key]);
+                        const rowDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+                        card.classList.toggle('dirty', rowDirty);
+
+                        let badge = card.querySelector('.cms-field-dirty-marker');
+                        if (rowDirty && !badge) {
+                            card.querySelector('.cms-multilang-label-col')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+                        } else if (!rowDirty && badge) {
+                            badge.remove();
+                        }
+                    });
                 });
             } else {
-                const el = document.getElementById(`field-way-${key}`) as HTMLInputElement | HTMLTextAreaElement;
-                el.addEventListener('input', () => {
-                    this.currentConfig[this.activeLangTab].waypoints[waypointId][key] = el.value;
-                    this.updateChangesCount();
-                    
-                    const card = el.closest('.cms-field-card')!;
-                    const isChanged = el.value !== originalVal;
-                    card.classList.toggle('dirty', isChanged);
-                    
-                    let badge = card.querySelector('.cms-field-dirty-marker');
-                    if (isChanged && !badge) {
-                        card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                    } else if (!isChanged && badge) {
-                        badge.remove();
-                    }
+                ['en', 'am', 'ar'].forEach(lang => {
+                    const el = document.getElementById(`field-way-${key}-${lang}`) as HTMLInputElement | HTMLTextAreaElement;
+                    if (!el) return;
+                    el.addEventListener('input', () => {
+                        this.currentConfig[lang].waypoints[waypointId][key] = el.value;
+                        this.updateChangesCount();
+
+                        const row = el.closest('.cms-multilang-row')!;
+                        const isDirtyEn = this.currentConfig.en.waypoints[waypointId][key] !== this.originalConfig.en?.waypoints?.[waypointId]?.[key];
+                        const isDirtyAm = this.currentConfig.am.waypoints[waypointId][key] !== this.originalConfig.am?.waypoints?.[waypointId]?.[key];
+                        const isDirtyAr = this.currentConfig.ar.waypoints[waypointId][key] !== this.originalConfig.ar?.waypoints?.[waypointId]?.[key];
+                        const rowDirty = isDirtyEn || isDirtyAm || isDirtyAr;
+
+                        row.classList.toggle('dirty', rowDirty);
+
+                        let badge = row.querySelector('.cms-field-dirty-marker');
+                        if (rowDirty && !badge) {
+                            row.querySelector('.cms-multilang-label-col')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+                        } else if (!rowDirty && badge) {
+                            badge.remove();
+                        }
+                    });
                 });
             }
         });
@@ -952,133 +1190,93 @@ class TranslinkCMS {
 
     /* --- 2. 3D Canvas Layout Renderers --- */
     private render3DBehaviorDefaultsWorkspace() {
-        const title = "Mesh Behavior Defaults";
-        const desc = "Edit default global rendering conditions applied to meshes inside the Three.js 3D canvas (shadows, opacities, wireframe states).";
-
         const defaults = this.currentMeshBehavior.defaults;
         const originalDefaults = this.originalMeshBehavior.defaults;
 
-        let fieldsHtml = '';
+        let cardsHtml = '';
         Object.keys(defaults).forEach(key => {
             const val = defaults[key];
             const isDirty = val !== originalDefaults[key];
 
+            let inputHtml = '';
             if (typeof val === 'boolean') {
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label">${key.replace(/([A-Z])/g, ' $1')}</label>
-                                <span class="cms-field-key">defaults.${key}</span>
-                            </div>
-                            ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: flex-start; height: 32px;">
-                            <label class="cms-switch">
-                                <input type="checkbox" id="field-beh-def-${key}" ${val ? 'checked' : ''}>
-                                <span class="cms-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                `;
+                inputHtml = `
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-size:11px;color:var(--t2);">Enabled</span>
+                        <label class="cms-switch">
+                            <input type="checkbox" id="field-beh-def-${key}" ${val ? 'checked' : ''}>
+                            <span class="cms-slider"></span>
+                        </label>
+                    </div>`;
             } else if (key === 'opacity') {
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label">${key.replace(/([A-Z])/g, ' $1')}</label>
-                                <span class="cms-field-key">defaults.${key}</span>
-                            </div>
-                            ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
+                inputHtml = `
+                    <div class="cms-slider-wrapper">
+                        <div class="cms-slider-label-row">
+                            <span>Level</span>
+                            <span class="cms-slider-value-badge" id="val-badge-beh-def-opacity">${val.toFixed(2)}</span>
                         </div>
-                        <div class="cms-slider-wrapper">
-                            <div class="cms-slider-label-row">
-                                <span>Opacity Level</span>
-                                <span class="cms-slider-value-badge" id="val-badge-beh-def-opacity">${val.toFixed(2)}</span>
-                            </div>
-                            <input type="range" class="cms-range-input" id="field-beh-def-opacity" min="0" max="1" step="0.05" value="${val}">
-                        </div>
-                    </div>
-                `;
+                        <input type="range" class="cms-range-input" id="field-beh-def-opacity" min="0" max="1" step="0.05" value="${val}">
+                    </div>`;
+            } else if (key === 'visible') {
+                inputHtml = `
+                    <select class="cms-select" id="field-beh-def-visible">
+                        <option value="null" ${val === null ? 'selected' : ''}>Default (null)</option>
+                        <option value="true" ${val === true ? 'selected' : ''}>True</option>
+                        <option value="false" ${val === false ? 'selected' : ''}>False</option>
+                    </select>`;
             } else {
-                const isVisible = key === 'visible';
-                fieldsHtml += `
-                    <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label">${key.replace(/([A-Z])/g, ' $1')}</label>
-                                <span class="cms-field-key">defaults.${key}</span>
-                            </div>
-                            ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
-                        </div>
-                        ${isVisible
-                            ? `
-                            <select class="cms-input" id="field-beh-def-visible" style="background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);">
-                                <option value="null" ${val === null ? 'selected' : ''}>Default (null)</option>
-                                <option value="true" ${val === true ? 'selected' : ''}>True (Visible)</option>
-                                <option value="false" ${val === false ? 'selected' : ''}>False (Hidden)</option>
-                            </select>
-                            `
-                            : `<input type="number" class="cms-input" id="field-beh-def-${key}" value="${val}">`
-                        }
-                    </div>
-                `;
+                inputHtml = `<input type="number" class="cms-input" id="field-beh-def-${key}" value="${val}">`;
             }
+
+            cardsHtml += `
+                <div class="cms-grid-card-item ${isDirty ? 'dirty' : ''}" id="card-beh-def-${key}">
+                    <div class="cms-grid-card-header">
+                        <span class="cms-grid-card-title">${key.replace(/([A-Z])/g, ' $1')}</span>
+                        <span class="cms-field-key" style="display:block;">defaults.${key}</span>
+                        ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
+                    </div>
+                    <div class="cms-grid-card-body">${inputHtml}</div>
+                </div>
+            `;
         });
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
-                </div>
-                <div class="cms-fields-grid">${fieldsHtml}</div>
+                <div class="cms-grid-cards cms-grid-cards-sm">${cardsHtml}</div>
             </div>
         `;
 
-        // Listeners for Defaults
+        // Bind listeners
         Object.keys(defaults).forEach(key => {
             const val = defaults[key];
             const originalVal = originalDefaults[key];
+
+            const markDirty = (card: Element, isChanged: boolean) => {
+                card.classList.toggle('dirty', isChanged);
+                let badge = card.querySelector('.cms-field-dirty-marker');
+                if (isChanged && !badge) {
+                    card.querySelector('.cms-grid-card-header')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+                } else if (!isChanged && badge) {
+                    badge.remove();
+                }
+            };
 
             if (typeof val === 'boolean') {
                 const input = document.getElementById(`field-beh-def-${key}`) as HTMLInputElement;
                 input.addEventListener('change', () => {
                     this.currentMeshBehavior.defaults[key] = input.checked;
                     this.updateChangesCount();
-                    
-                    const card = input.closest('.cms-field-card')!;
-                    const isChanged = input.checked !== originalVal;
-                    card.classList.toggle('dirty', isChanged);
-                    
-                    let badge = card.querySelector('.cms-field-dirty-marker');
-                    if (isChanged && !badge) {
-                        card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                    } else if (!isChanged && badge) {
-                        badge.remove();
-                    }
+                    markDirty(input.closest('.cms-grid-card-item')!, input.checked !== originalVal);
                 });
             } else if (key === 'opacity') {
                 const slider = document.getElementById('field-beh-def-opacity') as HTMLInputElement;
                 const badge = document.getElementById('val-badge-beh-def-opacity')!;
                 slider.addEventListener('input', () => {
-                    const parsedVal = parseFloat(slider.value);
-                    badge.textContent = parsedVal.toFixed(2);
-                    this.currentMeshBehavior.defaults.opacity = parsedVal;
+                    const v = parseFloat(slider.value);
+                    badge.textContent = v.toFixed(2);
+                    this.currentMeshBehavior.defaults.opacity = v;
                     this.updateChangesCount();
-                    
-                    const card = slider.closest('.cms-field-card')!;
-                    const isChanged = parsedVal !== originalVal;
-                    card.classList.toggle('dirty', isChanged);
-                    
-                    let mBadge = card.querySelector('.cms-field-dirty-marker');
-                    if (isChanged && !mBadge) {
-                        card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                    } else if (!isChanged && mBadge) {
-                        mBadge.remove();
-                    }
+                    markDirty(slider.closest('.cms-grid-card-item')!, v !== originalVal);
                 });
             } else if (key === 'visible') {
                 const select = document.getElementById('field-beh-def-visible') as HTMLSelectElement;
@@ -1086,143 +1284,71 @@ class TranslinkCMS {
                     let parsed: boolean | null = null;
                     if (select.value === 'true') parsed = true;
                     else if (select.value === 'false') parsed = false;
-                    
                     this.currentMeshBehavior.defaults.visible = parsed;
                     this.updateChangesCount();
-                    
-                    const card = select.closest('.cms-field-card')!;
-                    const isChanged = parsed !== originalVal;
-                    card.classList.toggle('dirty', isChanged);
-                    
-                    let badge = card.querySelector('.cms-field-dirty-marker');
-                    if (isChanged && !badge) {
-                        card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                    } else if (!isChanged && badge) {
-                        badge.remove();
-                    }
+                    markDirty(select.closest('.cms-grid-card-item')!, parsed !== originalVal);
                 });
             } else {
                 const input = document.getElementById(`field-beh-def-${key}`) as HTMLInputElement;
                 input.addEventListener('input', () => {
-                    const parsedVal = parseFloat(input.value) || 0;
-                    this.currentMeshBehavior.defaults[key] = parsedVal;
+                    const v = parseFloat(input.value) || 0;
+                    this.currentMeshBehavior.defaults[key] = v;
                     this.updateChangesCount();
-                    
-                    const card = input.closest('.cms-field-card')!;
-                    const isChanged = parsedVal !== originalVal;
-                    card.classList.toggle('dirty', isChanged);
+                    markDirty(input.closest('.cms-grid-card-item')!, v !== originalVal);
                 });
             }
         });
     }
 
-    private render3DBehaviorMeshesWorkspace() {
-        const title = "Individual Mesh Overrides";
-        const desc = "Edit specific visibility toggles or key animations overrides for individual geometry nodes within the 3D scene.";
-
+    private render3DMeshMaterialsWorkspace() {
         const meshes = this.currentMeshBehavior.meshes;
         const originalMeshes = this.originalMeshBehavior.meshes;
-
-        let fieldsHtml = '';
-        Object.keys(meshes).forEach(meshId => {
-            const meshObj = meshes[meshId];
-            const originalObj = originalMeshes[meshId] || {};
-            const isDirty = JSON.stringify(meshObj) !== JSON.stringify(originalObj);
-
-            const isVisible = meshObj.visible !== undefined ? meshObj.visible : 'default';
-            const overrideAnim = meshObj.overrideAnimation !== undefined ? meshObj.overrideAnimation : 'default';
-
-            fieldsHtml += `
-                <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                    <div class="cms-field-label-row">
-                        <div class="cms-field-label-wrapper">
-                            <label class="cms-field-label">${meshId.replace(/_/g, ' ')}</label>
-                            <span class="cms-field-key">meshes.${meshId}</span>
-                        </div>
-                        ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-                            <span style="color: var(--text-secondary);">Visible state:</span>
-                            <select class="cms-input" id="field-beh-mesh-visible-${meshId}" style="width: 140px; padding: 4px 8px; font-size: 11px; background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);">
-                                <option value="default" ${isVisible === 'default' ? 'selected' : ''}>Inherit default</option>
-                                <option value="true" ${isVisible === true ? 'selected' : ''}>True (Visible)</option>
-                                <option value="false" ${isVisible === false ? 'selected' : ''}>False (Hidden)</option>
-                            </select>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px;">
-                            <span style="color: var(--text-secondary);">Override Animation:</span>
-                            <select class="cms-input" id="field-beh-mesh-anim-${meshId}" style="width: 140px; padding: 4px 8px; font-size: 11px; background-color: var(--bg-input); border-color: var(--border-color); color: var(--text-primary);">
-                                <option value="default" ${overrideAnim === 'default' ? 'selected' : ''}>Inherit default</option>
-                                <option value="true" ${overrideAnim === true ? 'selected' : ''}>True (Override)</option>
-                                <option value="false" ${overrideAnim === false ? 'selected' : ''}>False (Follow)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-
-        this.mainContentEl.innerHTML = `
-            <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
-                </div>
-                <div class="cms-fields-grid">${fieldsHtml}</div>
-            </div>
-        `;
-
-        // Listeners for Meshes
-        Object.keys(meshes).forEach(meshId => {
-            const visibleSelect = document.getElementById(`field-beh-mesh-visible-${meshId}`) as HTMLSelectElement;
-            const animSelect = document.getElementById(`field-beh-mesh-anim-${meshId}`) as HTMLSelectElement;
-            const originalObj = originalMeshes[meshId] || {};
-
-            const updateMeshConfig = () => {
-                const meshObj: any = {};
-                
-                if (visibleSelect.value === 'true') meshObj.visible = true;
-                else if (visibleSelect.value === 'false') meshObj.visible = false;
-                
-                if (animSelect.value === 'true') meshObj.overrideAnimation = true;
-                else if (animSelect.value === 'false') meshObj.overrideAnimation = false;
-
-                this.currentMeshBehavior.meshes[meshId] = meshObj;
-                this.updateChangesCount();
-
-                const card = visibleSelect.closest('.cms-field-card')!;
-                const isChanged = JSON.stringify(meshObj) !== JSON.stringify(originalObj);
-                card.classList.toggle('dirty', isChanged);
-
-                let badge = card.querySelector('.cms-field-dirty-marker');
-                if (isChanged && !badge) {
-                    card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
-                } else if (!isChanged && badge) {
-                    badge.remove();
-                }
-            };
-
-            visibleSelect.addEventListener('change', updateMeshConfig);
-            animSelect.addEventListener('change', updateMeshConfig);
-        });
-    }
-
-    private render3DMaterialsWorkspace() {
-        const title = "PBR Material Aesthetics";
-        const desc = "Edit color hex values, metallic layers, roughness surfaces, and reflection coefficients for Physically-Based materials on the 3D model.";
-
         const materials = this.currentMeshMaterial.materials;
         const originalMaterials = this.originalMeshMaterial.materials;
 
-        let fieldsHtml = '';
+        const getMeshIds = (matId: string): string[] => {
+            switch (matId) {
+                case 'fuelTank': return ['Fuel_tank'];
+                case 'belt': return ['Belt'];
+                case 'fuelHead': return ['Fuel_Head'];
+                case 'fuelHeadCover': return ['Fuel_Head_cover'];
+                case 'prob': return ['Prob'];
+                case 'harness': return ['Harness'];
+                case 'filter': return ['Filter'];
+                case 'filterWireframe': return ['Filter_Wireframe'];
+                case 'base': return ['Base'];
+                case 'bolt': return ['Bolt_01', 'Bolt_02', 'Bolt_03', 'Bolt_04'];
+                case 'light': return ['light'];
+                case 'brandLogo': return ['Logo_Translink_pro', 'Text_Translink_pro'];
+                case 'virtualStudio': return ['virtual_studio'];
+                case 'truckBody': return ['Truck', 'Cab_door'];
+                case 'truckLights': return ['Truck_Lights'];
+                case 'truckGlass': return ['Cab_Glass', 'Cab_door_glass', 'Cab_Door_glass_frame'];
+                case 'truckWheels': return ['axle001_Front_wheel_Left', 'axle001_Front_wheel_Right', 'axle002_wheel_Both_Left_Right', 'axle003_wheel_Both_Left_Right'];
+                default: {
+                    const capitalized = matId.charAt(0).toUpperCase() + matId.slice(1);
+                    return [capitalized];
+                }
+            }
+        };
+
+        let cardsHtml = '';
         Object.keys(materials).forEach(matId => {
             const matObj = materials[matId];
-            const originalObj = originalMaterials[matId];
-            const isDirty = JSON.stringify(matObj) !== JSON.stringify(originalObj);
+            const originalMatObj = originalMaterials[matId];
+            const meshIds = getMeshIds(matId);
+
+            // Compute if card is dirty initially
+            let isMatChanged = JSON.stringify(matObj) !== JSON.stringify(originalMatObj);
+            let isBehChanged = false;
+            meshIds.forEach(meshId => {
+                const meshObj = meshes[meshId];
+                const originalMeshObj = originalMeshes[meshId];
+                if (meshObj && JSON.stringify(meshObj) !== JSON.stringify(originalMeshObj || {})) {
+                    isBehChanged = true;
+                }
+            });
+            const isDirty = isMatChanged || isBehChanged;
 
             let humanLabel = matId.replace(/([A-Z])/g, ' $1');
             if (matId === 'prob') humanLabel = 'Precision Probe';
@@ -1231,97 +1357,187 @@ class TranslinkCMS {
             if (matId === 'fuelHeadCover') humanLabel = 'Harness Cover';
             if (matId === 'brandLogo') humanLabel = 'Brand Emissive Logo';
             if (matId === 'filterWireframe') humanLabel = 'Filter Wireframe';
+            if (matId === 'virtualStudio') humanLabel = 'Virtual Studio';
+            if (matId === 'truckBody') humanLabel = 'Truck Body';
+            if (matId === 'truckTires') humanLabel = 'Truck Tires';
+            if (matId === 'truckWheels') humanLabel = 'Truck Wheels';
+            if (matId === 'truckGlass') humanLabel = 'Truck Glass';
+            if (matId === 'truckLights') humanLabel = 'Truck Lights';
 
-            fieldsHtml += `
-                <div class="cms-field-card ${isDirty ? 'dirty' : ''}">
-                    <div class="cms-field-label-row" style="margin-bottom: 10px;">
-                        <div class="cms-field-label-wrapper">
-                            <label class="cms-field-label">${humanLabel}</label>
-                            <span class="cms-field-key">materials.${matId}</span>
+            // 1. Behavior section
+            let behaviorHtml = '';
+            meshIds.forEach(meshId => {
+                const meshObj = meshes[meshId];
+                if (meshObj) {
+                    const isVisible = meshObj.visible !== undefined ? meshObj.visible : 'default';
+                    const overrideAnim = meshObj.overrideAnimation !== undefined ? meshObj.overrideAnimation : 'default';
+                    
+                    const subLabelHtml = meshIds.length > 1 
+                        ? `<div class="cms-sub-mesh-label">${meshId.replace(/_/g, ' ')}</div>` 
+                        : '';
+
+                    behaviorHtml += `
+                        <div class="cms-mesh-behavior-row" style="margin-top:${behaviorHtml ? '8px' : '0'};">
+                            ${subLabelHtml}
+                            <div class="cms-grid-card-field-row">
+                                <span class="cms-grid-card-field-label">Visible State</span>
+                                <select class="cms-select" id="field-beh-mesh-visible-${meshId}" style="width:130px;">
+                                    <option value="default" ${isVisible === 'default' ? 'selected' : ''}>Inherit</option>
+                                    <option value="true" ${isVisible === true ? 'selected' : ''}>True (Visible)</option>
+                                    <option value="false" ${isVisible === false ? 'selected' : ''}>False (Hidden)</option>
+                                </select>
+                            </div>
+                            <div class="cms-grid-card-field-row" style="margin-top:6px;">
+                                <span class="cms-grid-card-field-label">Animation</span>
+                                <select class="cms-select" id="field-beh-mesh-anim-${meshId}" style="width:130px;">
+                                    <option value="default" ${overrideAnim === 'default' ? 'selected' : ''}>Inherit</option>
+                                    <option value="true" ${overrideAnim === true ? 'selected' : ''}>True (Override)</option>
+                                    <option value="false" ${overrideAnim === false ? 'selected' : ''}>False (Follow)</option>
+                                </select>
+                            </div>
                         </div>
+                    `;
+                }
+            });
+
+            // 2. Material section
+            let materialHtml = '';
+            if (matObj.color !== undefined) {
+                materialHtml += `
+                    <div class="cms-color-grid-item">
+                        <span class="cms-color-grid-label">Base Color</span>
+                        <div class="cms-color-picker-wrapper">
+                            <input type="color" class="cms-color-chip" id="field-mat-color-${matId}" value="${matObj.color}">
+                            <input type="text" class="cms-color-hex-text" id="field-mat-color-hex-${matId}" value="${matObj.color}" maxlength="7">
+                        </div>
+                    </div>
+                `;
+            }
+            if (matObj.metalness !== undefined) {
+                materialHtml += `
+                    <div class="cms-slider-wrapper">
+                        <div class="cms-slider-label-row">
+                            <span>Metalness</span>
+                            <span class="cms-slider-value-badge" id="val-badge-mat-metal-${matId}">${matObj.metalness.toFixed(2)}</span>
+                        </div>
+                        <input type="range" class="cms-range-input" id="field-mat-metal-${matId}" min="0" max="1" step="0.01" value="${matObj.metalness}">
+                    </div>
+                `;
+            }
+            if (matObj.roughness !== undefined) {
+                materialHtml += `
+                    <div class="cms-slider-wrapper">
+                        <div class="cms-slider-label-row">
+                            <span>Roughness</span>
+                            <span class="cms-slider-value-badge" id="val-badge-mat-rough-${matId}">${matObj.roughness.toFixed(2)}</span>
+                        </div>
+                        <input type="range" class="cms-range-input" id="field-mat-rough-${matId}" min="0" max="1" step="0.01" value="${matObj.roughness}">
+                    </div>
+                `;
+            }
+            if (matObj.envMapIntensity !== undefined) {
+                materialHtml += `
+                    <div class="cms-slider-wrapper">
+                        <div class="cms-slider-label-row">
+                            <span>Env Map Intensity</span>
+                            <span class="cms-slider-value-badge" id="val-badge-mat-env-${matId}">${matObj.envMapIntensity.toFixed(2)}</span>
+                        </div>
+                        <input type="range" class="cms-range-input" id="field-mat-env-${matId}" min="0" max="3" step="0.05" value="${matObj.envMapIntensity}">
+                    </div>
+                `;
+            }
+            if (matObj.emissive !== undefined) {
+                materialHtml += `
+                    <div class="cms-color-grid-item" style="margin-top:4px;">
+                        <span class="cms-color-grid-label">Emissive Glow Color</span>
+                        <div class="cms-color-picker-wrapper">
+                            <input type="color" class="cms-color-chip" id="field-mat-emissive-${matId}" value="${matObj.emissive}">
+                            <input type="text" class="cms-color-hex-text" id="field-mat-emissive-hex-${matId}" value="${matObj.emissive}" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="cms-slider-wrapper" style="margin-top:4px;">
+                        <div class="cms-slider-label-row">
+                            <span>Emissive Intensity</span>
+                            <span class="cms-slider-value-badge" id="val-badge-mat-emis-int-${matId}">${matObj.emissiveIntensity.toFixed(2)}</span>
+                        </div>
+                        <input type="range" class="cms-range-input" id="field-mat-emis-int-${matId}" min="0" max="2" step="0.05" value="${matObj.emissiveIntensity}">
+                    </div>
+                `;
+            }
+
+            cardsHtml += `
+                <div class="cms-grid-card-item ${isDirty ? 'dirty' : ''}" data-mat-id="${matId}">
+                    <div class="cms-grid-card-header">
+                        <span class="cms-grid-card-title">${humanLabel}</span>
+                        <span class="cms-field-key" style="display:block;">materials.${matId}</span>
                         ${isDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
                     </div>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        ${matObj.color !== undefined ? `
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <span style="font-size: 10px; color: var(--text-secondary); font-family: var(--font-heading);">PBR Base Color</span>
-                                <div class="cms-color-picker-wrapper">
-                                    <input type="color" class="cms-color-chip" id="field-mat-color-${matId}" value="${matObj.color}">
-                                    <input type="text" class="cms-color-hex-text" id="field-mat-color-hex-${matId}" value="${matObj.color}" maxlength="7">
+                    <div class="cms-grid-card-body">
+                        ${behaviorHtml ? `
+                            <div class="cms-card-section">
+                                <div class="cms-card-section-title">Behavior Overrides</div>
+                                <div class="cms-card-section-fields">
+                                    ${behaviorHtml}
                                 </div>
                             </div>
                         ` : ''}
-
-                        ${matObj.metalness !== undefined ? `
-                            <div class="cms-slider-wrapper">
-                                <div class="cms-slider-label-row">
-                                    <span>Metalness (Metallic sheen)</span>
-                                    <span class="cms-slider-value-badge" id="val-badge-mat-metal-${matId}">${matObj.metalness.toFixed(2)}</span>
-                                </div>
-                                <input type="range" class="cms-range-input" id="field-mat-metal-${matId}" min="0" max="1" step="0.01" value="${matObj.metalness}">
+                        
+                        <div class="cms-card-section">
+                            <div class="cms-card-section-title">Material Aesthetics</div>
+                            <div class="cms-card-section-fields">
+                                ${materialHtml}
                             </div>
-                        ` : ''}
-
-                        ${matObj.roughness !== undefined ? `
-                            <div class="cms-slider-wrapper">
-                                <div class="cms-slider-label-row">
-                                    <span>Roughness (Surface microscopic relief)</span>
-                                    <span class="cms-slider-value-badge" id="val-badge-mat-rough-${matId}">${matObj.roughness.toFixed(2)}</span>
-                                </div>
-                                <input type="range" class="cms-range-input" id="field-mat-rough-${matId}" min="0" max="1" step="0.01" value="${matObj.roughness}">
-                            </div>
-                        ` : ''}
-
-                        ${matObj.envMapIntensity !== undefined ? `
-                            <div class="cms-slider-wrapper">
-                                <div class="cms-slider-label-row">
-                                    <span>Env Map Intensity (Environment reflections)</span>
-                                    <span class="cms-slider-value-badge" id="val-badge-mat-env-${matId}">${matObj.envMapIntensity.toFixed(2)}</span>
-                                </div>
-                                <input type="range" class="cms-range-input" id="field-mat-env-${matId}" min="0" max="3" step="0.05" value="${matObj.envMapIntensity}">
-                            </div>
-                        ` : ''}
-
-                        ${matObj.emissive !== undefined ? `
-                            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
-                                <span style="font-size: 10px; color: var(--text-secondary); font-family: var(--font-heading);">Emissive (Self-Glow) Color</span>
-                                <div class="cms-color-picker-wrapper">
-                                    <input type="color" class="cms-color-chip" id="field-mat-emissive-${matId}" value="${matObj.emissive}">
-                                    <input type="text" class="cms-color-hex-text" id="field-mat-emissive-hex-${matId}" value="${matObj.emissive}" maxlength="7">
-                                </div>
-                            </div>
-                            
-                            <div class="cms-slider-wrapper" style="margin-top: 4px;">
-                                <div class="cms-slider-label-row">
-                                    <span>Emissive Intensity</span>
-                                    <span class="cms-slider-value-badge" id="val-badge-mat-emis-int-${matId}">${matObj.emissiveIntensity.toFixed(2)}</span>
-                                </div>
-                                <input type="range" class="cms-range-input" id="field-mat-emis-int-${matId}" min="0" max="2" step="0.05" value="${matObj.emissiveIntensity}">
-                            </div>
-                        ` : ''}
+                        </div>
                     </div>
                 </div>
             `;
         });
 
         this.mainContentEl.innerHTML = `
-            <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
+            <div class="cms-view-container" style="max-width: 100%; padding: 16px;">
+                <div class="cms-grid-cards sm-grid">
+                    ${cardsHtml}
                 </div>
-                <div class="cms-fields-grid">${fieldsHtml}</div>
             </div>
         `;
 
-        // Bind interactive color and numeric range listeners
+        // Bind interactive event listeners for each card
         Object.keys(materials).forEach(matId => {
             const matObj = materials[matId];
-            const originalObj = originalMaterials[matId];
+            const originalMatObj = originalMaterials[matId];
+            const meshIds = getMeshIds(matId);
 
+            const cardEl = this.mainContentEl.querySelector(`[data-mat-id="${matId}"]`) as HTMLElement;
+
+            const updateCardDirty = () => {
+                this.markCardDirtyState(cardEl, matId, meshIds);
+            };
+
+            // Bind Mesh Behaviors
+            meshIds.forEach(meshId => {
+                const visibleSelect = document.getElementById(`field-beh-mesh-visible-${meshId}`) as HTMLSelectElement;
+                const animSelect = document.getElementById(`field-beh-mesh-anim-${meshId}`) as HTMLSelectElement;
+                const originalMeshObj = originalMeshes[meshId] || {};
+
+                if (visibleSelect && animSelect) {
+                    const updateMeshConfig = () => {
+                        const currentMeshObj: any = {};
+                        if (visibleSelect.value === 'true') currentMeshObj.visible = true;
+                        else if (visibleSelect.value === 'false') currentMeshObj.visible = false;
+                        if (animSelect.value === 'true') currentMeshObj.overrideAnimation = true;
+                        else if (animSelect.value === 'false') currentMeshObj.overrideAnimation = false;
+
+                        this.currentMeshBehavior.meshes[meshId] = currentMeshObj;
+                        this.updateChangesCount();
+                        updateCardDirty();
+                    };
+
+                    visibleSelect.addEventListener('change', updateMeshConfig);
+                    animSelect.addEventListener('change', updateMeshConfig);
+                }
+            });
+
+            // Bind Material Aesthetics
             if (matObj.color !== undefined) {
                 const picker = document.getElementById(`field-mat-color-${matId}`) as HTMLInputElement;
                 const text = document.getElementById(`field-mat-color-hex-${matId}`) as HTMLInputElement;
@@ -1329,7 +1545,7 @@ class TranslinkCMS {
                 const updateColor = (hex: string) => {
                     this.currentMeshMaterial.materials[matId].color = hex;
                     this.updateChangesCount();
-                    this.markCardDirtyState(picker, originalObj);
+                    updateCardDirty();
                 };
 
                 picker.addEventListener('input', () => {
@@ -1356,7 +1572,7 @@ class TranslinkCMS {
                     badge.textContent = parsedVal.toFixed(2);
                     this.currentMeshMaterial.materials[matId].metalness = parsedVal;
                     this.updateChangesCount();
-                    this.markCardDirtyState(slider, originalObj);
+                    updateCardDirty();
                 });
             }
 
@@ -1369,7 +1585,7 @@ class TranslinkCMS {
                     badge.textContent = parsedVal.toFixed(2);
                     this.currentMeshMaterial.materials[matId].roughness = parsedVal;
                     this.updateChangesCount();
-                    this.markCardDirtyState(slider, originalObj);
+                    updateCardDirty();
                 });
             }
 
@@ -1382,7 +1598,7 @@ class TranslinkCMS {
                     badge.textContent = parsedVal.toFixed(2);
                     this.currentMeshMaterial.materials[matId].envMapIntensity = parsedVal;
                     this.updateChangesCount();
-                    this.markCardDirtyState(slider, originalObj);
+                    updateCardDirty();
                 });
             }
 
@@ -1395,7 +1611,7 @@ class TranslinkCMS {
                 const updateEmissiveColor = (hex: string) => {
                     this.currentMeshMaterial.materials[matId].emissive = hex;
                     this.updateChangesCount();
-                    this.markCardDirtyState(picker, originalObj);
+                    updateCardDirty();
                 };
 
                 picker.addEventListener('input', () => {
@@ -1417,23 +1633,36 @@ class TranslinkCMS {
                     badge.textContent = parsedVal.toFixed(2);
                     this.currentMeshMaterial.materials[matId].emissiveIntensity = parsedVal;
                     this.updateChangesCount();
-                    this.markCardDirtyState(slider, originalObj);
+                    updateCardDirty();
                 });
             }
         });
     }
 
-    private markCardDirtyState(inputEl: HTMLElement, originalObj: any) {
-        const card = inputEl.closest('.cms-field-card')!;
-        const matId = card.querySelector('.cms-field-key')!.textContent!.split('.').pop()!;
+    private markCardDirtyState(cardEl: HTMLElement, matId: string, meshIds: string[]) {
         const matCurrent = this.currentMeshMaterial.materials[matId];
-        
-        const isChanged = JSON.stringify(matCurrent) !== JSON.stringify(originalObj);
-        card.classList.toggle('dirty', isChanged);
+        const matOriginal = this.originalMeshMaterial.materials[matId];
+        let isMatChanged = false;
+        if (matCurrent && matOriginal) {
+            isMatChanged = JSON.stringify(matCurrent) !== JSON.stringify(matOriginal);
+        }
 
-        let badge = card.querySelector('.cms-field-dirty-marker');
+        let isBehChanged = false;
+        for (const meshId of meshIds) {
+            const behCurrent = this.currentMeshBehavior.meshes[meshId];
+            const behOriginal = this.originalMeshBehavior.meshes[meshId];
+            if (behCurrent && JSON.stringify(behCurrent) !== JSON.stringify(behOriginal || {})) {
+                isBehChanged = true;
+                break;
+            }
+        }
+
+        const isChanged = isMatChanged || isBehChanged;
+        cardEl.classList.toggle('dirty', isChanged);
+
+        let badge = cardEl.querySelector('.cms-field-dirty-marker');
         if (isChanged && !badge) {
-            card.querySelector('.cms-field-label-row')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
+            cardEl.querySelector('.cms-grid-card-header')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker">Modified</span>');
         } else if (!isChanged && badge) {
             badge.remove();
         }
@@ -1555,12 +1784,6 @@ class TranslinkCMS {
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
-                </div>
                 <div>${sectionsHtml}</div>
             </div>
         `;
@@ -1669,12 +1892,6 @@ class TranslinkCMS {
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
-                </div>
                 <div style="display: flex; flex-direction: column; gap: 30px;">
                     ${sectionsHtml}
                 </div>
@@ -1735,19 +1952,9 @@ class TranslinkCMS {
 
         this.mainContentEl.innerHTML = `
             <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
-                </div>
-
                 <div class="cms-fields-grid" style="grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));">
                     <!-- 1. Crawler Sync Engine -->
                     <div class="cms-field-card ${seDirty ? 'dirty' : ''}">
-                        <div class="cms-field-label-row">
-                            <div class="cms-field-label-wrapper">
-                                <label class="cms-field-label">Crawler Sync Engine</label>
                                 <span class="cms-field-key">knowledge_config.sync_engine</span>
                             </div>
                             ${seDirty ? '<span class="cms-field-dirty-marker">Modified</span>' : ''}
@@ -2104,30 +2311,15 @@ class TranslinkCMS {
     }
 
     private renderMarkdownKnowledgeWorkspace() {
-        const title = "AI Assistant Knowledge Manual (MD)";
-        const desc = "Edit the core semantic markdown text manual directly. This file serves as the canonical RAG database, loaded by the Gemini Live Voice assistant engine during real-time calls.";
-
         const isDirty = this.currentKnowledgeMd !== this.originalKnowledgeMd;
 
         this.mainContentEl.innerHTML = `
-            <div class="cms-view-container" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
-                <div class="cms-content-header" style="margin-bottom: 12px; flex-shrink: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div>
-                            <h2 class="cms-content-title">${title}</h2>
-                            <p class="cms-content-description">${desc}</p>
-                        </div>
-                        ${isDirty ? '<span class="cms-field-dirty-marker" style="font-size: 11px;">Modified</span>' : ''}
-                    </div>
+            <div class="cms-view-container" style="height: calc(100vh - 80px); display: flex; flex-direction: column; padding-top: 10px;">
+                <div style="font-family: monospace; font-size: 10px; color: var(--t3); display: flex; justify-content: space-between; align-items: center; padding: 4px 0 8px; flex-shrink: 0;">
+                    <span>Path: src/translinkconfig/live-voice/knowledge.md ${isDirty ? '<span class="cms-field-dirty-marker" style="margin-top: 0; margin-left: 8px; display: inline-block;">Modified</span>' : ''}</span>
+                    <span id="mdCharCounter">Characters: ${this.currentKnowledgeMd.length}</span>
                 </div>
-
-                <div style="flex: 1; min-height: 200px; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-family: monospace; font-size: 10px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
-                        <span>Path: src/translinkconfig/live-voice/knowledge.md</span>
-                        <span id="mdCharCounter">Characters: ${this.currentKnowledgeMd.length}</span>
-                    </div>
-                    <textarea class="cms-json-textarea" id="cmsKnowledgeMdTextarea" style="flex: 1; resize: none; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; line-height: 1.5; padding: 16px; background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); outline: none; border-radius: 4px;" spellcheck="false"></textarea>
-                </div>
+                <textarea class="cms-json-textarea" id="cmsKnowledgeMdTextarea" style="flex: 1; resize: none; font-family: var(--fm); font-size: 12px; line-height: 1.5; padding: 16px; background-color: var(--bg-4); border: 1px solid var(--bd-1); color: var(--t1); outline: none; border-radius: 4px;" spellcheck="false"></textarea>
             </div>
         `;
 
@@ -2145,7 +2337,10 @@ class TranslinkCMS {
             const badge = document.querySelector('.cms-field-dirty-marker');
             const hasChanges = this.currentKnowledgeMd !== this.originalKnowledgeMd;
             if (hasChanges && !badge) {
-                document.querySelector('.cms-content-header div')!.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker" style="font-size: 11px;">Modified</span>');
+                const pathSpan = textarea.previousElementSibling?.firstElementChild;
+                if (pathSpan) {
+                    pathSpan.insertAdjacentHTML('beforeend', '<span class="cms-field-dirty-marker" style="margin-top: 0; margin-left: 8px; display: inline-block;">Modified</span>');
+                }
             } else if (!hasChanges && badge) {
                 badge.remove();
             }
@@ -2196,16 +2391,10 @@ class TranslinkCMS {
         }
 
         this.mainContentEl.innerHTML = `
-            <div class="cms-view-container">
-                <div class="cms-content-header">
-                    <div>
-                        <h2 class="cms-content-title">${title}</h2>
-                        <p class="cms-content-description">${desc}</p>
-                    </div>
-                </div>
-                <div class="cms-json-view">
+            <div class="cms-view-container" style="height: calc(100vh - 80px); display: flex; flex-direction: column; padding-top: 10px;">
+                <div class="cms-json-view" style="flex: 1; display: flex; flex-direction: column;">
                     <div id="jsonErrorContainer" class="cms-json-error" style="display: none;"></div>
-                    <textarea class="cms-json-textarea" id="cmsJsonTextarea" spellcheck="false"></textarea>
+                    <textarea class="cms-json-textarea" id="cmsJsonTextarea" style="flex: 1;" spellcheck="false"></textarea>
                 </div>
             </div>
         `;
@@ -2453,16 +2642,11 @@ class TranslinkCMS {
                 behDefEl.style.display = counts.behDefaults > 0 ? 'inline-block' : 'none';
             }
 
-            const behMeshEl = document.getElementById('count-3d-beh-mesh')!;
-            if (behMeshEl) {
-                behMeshEl.textContent = counts.behMeshes.toString();
-                behMeshEl.style.display = counts.behMeshes > 0 ? 'inline-block' : 'none';
-            }
-
-            const matEl = document.getElementById('count-3d-mat')!;
-            if (matEl) {
-                matEl.textContent = counts.materials.toString();
-                matEl.style.display = counts.materials > 0 ? 'inline-block' : 'none';
+            const meshMatEl = document.getElementById('count-3d-mesh-mat')!;
+            if (meshMatEl) {
+                const totalVal = counts.behMeshes + counts.materials;
+                meshMatEl.textContent = totalVal.toString();
+                meshMatEl.style.display = totalVal > 0 ? 'inline-block' : 'none';
             }
         } else if (this.activeMode === 'camera') {
             const camDeskEl = document.getElementById('count-cam-desk')!;
