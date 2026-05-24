@@ -68,7 +68,6 @@ app.use('/api', (req, res, next) => {
 
 // Common middleware
 app.use(express.json());
-app.use(express.text({ type: 'text/*' }));
 
 // API Routes
 app.use('/api', apiRouter);
@@ -95,11 +94,6 @@ if (isProduction) {
         res.setHeader('Cache-Control', 'public, max-age=3600');
       },
     }));
-
-    // Serve CMS page explicitly on /cms route
-    app.get('/cms', (_req, res) => {
-      res.sendFile(path.join(distPath, 'cms.html'));
-    });
 
     // SPA fallback — Express 5 wildcard syntax
     app.get('*any', (_req, res) => {

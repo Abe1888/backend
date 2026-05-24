@@ -5,7 +5,7 @@ services:
     plan: starter
 
     # Build: type-check → compile frontend (dist/) → compile server (dist-server/)
-    buildCommand: npm ci --include=dev && npm run build
+    buildCommand: npm ci && npm run build
 
     # Start: run the compiled server directly — no devDependencies needed at runtime
     startCommand: node dist-server/index.js
