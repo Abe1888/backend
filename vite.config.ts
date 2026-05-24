@@ -297,11 +297,55 @@ const manualChunks: ManualChunksOption = (id: string) => {
   return undefined;
 };
 
+function copyConfigsPlugin() {
+  return {
+    name: 'copy-configs-plugin',
+    closeBundle() {
+      const srcDir = path.resolve(__dirname, 'src', 'translinkconfig');
+      const destDir = path.resolve(__dirname, 'dist', 'src', 'translinkconfig');
+
+      function copyRecursiveSync(src: string, dest: string) {
+        const exists = fs.existsSync(src);
+        if (!exists) return;
+        
+        const stats = fs.statSync(src);
+        const isDirectory = stats.isDirectory();
+
+        if (isDirectory) {
+          if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+          }
+          fs.readdirSync(src).forEach((childItemName) => {
+            copyRecursiveSync(
+              path.join(src, childItemName),
+              path.join(dest, childItemName)
+            );
+          });
+        } else {
+          fs.copyFileSync(src, dest);
+        }
+      }
+
+      try {
+        if (fs.existsSync(srcDir)) {
+          console.log(`[Vite Copy Configs] Copying ${srcDir} to ${destDir}...`);
+          copyRecursiveSync(srcDir, destDir);
+          console.log('[Vite Copy Configs] Successfully copied configuration files for static CMS fallback!');
+        } else {
+          console.warn(`[Vite Copy Configs] Warning: Source config directory ${srcDir} does not exist!`);
+        }
+      } catch (err) {
+        console.error('[Vite Copy Configs] Error copying configs:', err);
+      }
+    }
+  };
+}
+
 export default defineConfig({
   root: '.',
   base: '/',
   publicDir: 'public',
-  plugins: [react(), geminiVoicePlugin(), cmsPlugin()],
+  plugins: [react(), geminiVoicePlugin(), cmsPlugin(), copyConfigsPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

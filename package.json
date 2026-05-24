@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node dist-server/index.js",
     "dev": "vite --port 3001",
-    "build": "tsc --noEmit && vite build && node scripts/copy-configs.js && tsc -p tsconfig.server.json",
+    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json",
     "preview": "vite preview --port 3002",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",

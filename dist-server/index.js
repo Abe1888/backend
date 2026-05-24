@@ -59,15 +59,53 @@ app.use('/api', (req, res, next) => {
 });
 // Common middleware
 app.use(express.json());
+app.use(express.text({ type: 'text/*' }));
 // API Routes
 app.use('/api', apiRouter);
-// ─── Root Route ──────────────────────────────────────────────────────────────
-app.get('/', (_req, res) => {
-    res.json({
-        status: 'ok',
-        message: 'TRANSLINK API & WebSocket Server Active'
+// ─── Static + SPA ──────────────────────────────────────────────────────────────
+if (isProduction) {
+    // dist/ is built by `vite build` and sits at the repo root
+    const distPath = path.resolve(__dirname, '..', 'dist');
+    console.log(`[Server] Production mode: Serving static files from ${distPath}`);
+    if (fs.existsSync(distPath)) {
+        app.use(express.static(distPath, {
+            etag: true,
+            lastModified: true,
+            setHeaders: (res, filePath) => {
+                if (filePath.endsWith('index.html')) {
+                    res.setHeader('Cache-Control', 'no-cache');
+                    return;
+                }
+                if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+                    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                    return;
+                }
+                res.setHeader('Cache-Control', 'public, max-age=3600');
+            },
+        }));
+        // Serve CMS page explicitly on /cms route
+        app.get('/cms', (_req, res) => {
+            res.sendFile(path.join(distPath, 'cms.html'));
+        });
+        // SPA fallback — Express 5 wildcard syntax
+        app.get('*any', (_req, res) => {
+            res.sendFile(path.join(distPath, 'index.html'));
+        });
+    }
+    else {
+        console.warn(`[Server] Warning: 'dist' folder not found at ${distPath}. ` +
+            `Make sure the build command ran successfully (npm run build).`);
+        app.get('*any', (_req, res) => {
+            res.status(503).send('Frontend assets not found. Check that the build completed successfully.');
+        });
+    }
+}
+else {
+    console.log('[Server] Development mode: API/WebSocket server running alongside Vite dev server.');
+    app.get('/', (_req, res) => {
+        res.send('API/WebSocket server running in development mode. Use Vite on port 3001.');
     });
-});
+}
 // ─── HTTP + WebSocket Server ───────────────────────────────────────────────────
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
